@@ -7,7 +7,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;600&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
   body {
     min-height: 100vh;
     background: #0a0a0a;
@@ -17,7 +16,6 @@
     font-family: 'Rajdhani', sans-serif;
     overflow: hidden;
   }
-
   body::before {
     content: '';
     position: fixed;
@@ -29,12 +27,10 @@
     animation: gridMove 8s linear infinite;
     z-index: 0;
   }
-
   @keyframes gridMove {
     0% { transform: translateY(0); }
     100% { transform: translateY(40px); }
   }
-
   body::after {
     content: '';
     position: fixed;
@@ -47,12 +43,10 @@
     z-index: 0;
     animation: pulse 4s ease-in-out infinite;
   }
-
   @keyframes pulse {
     0%, 100% { opacity: 0.6; transform: translateX(-50%) scale(1); }
     50% { opacity: 1; transform: translateX(-50%) scale(1.1); }
   }
-
   .card {
     position: relative;
     z-index: 1;
@@ -64,7 +58,6 @@
     backdrop-filter: blur(20px);
     animation: fadeUp 0.8s ease both;
   }
-
   .card::before {
     content: '';
     position: absolute;
@@ -72,12 +65,10 @@
     height: 2px;
     background: linear-gradient(90deg, transparent, #ff3c00, transparent);
   }
-
   @keyframes fadeUp {
     from { opacity: 0; transform: translateY(30px); }
     to { opacity: 1; transform: translateY(0); }
   }
-
   .avatar {
     width: 90px;
     height: 90px;
@@ -94,7 +85,6 @@
     box-shadow: 0 0 30px rgba(255,60,0,0.4);
     animation: fadeUp 0.8s 0.1s ease both;
   }
-
   .name {
     font-family: 'Bebas Neue', sans-serif;
     font-size: 36px;
@@ -103,7 +93,6 @@
     line-height: 1;
     animation: fadeUp 0.8s 0.2s ease both;
   }
-
   .title {
     font-size: 12px;
     letter-spacing: 2.5px;
@@ -113,7 +102,6 @@
     margin-bottom: 6px;
     animation: fadeUp 0.8s 0.25s ease both;
   }
-
   .licensed {
     display: inline-flex;
     align-items: center;
@@ -125,20 +113,13 @@
     margin-bottom: 32px;
     animation: fadeUp 0.8s 0.3s ease both;
   }
-
   .licensed::before, .licensed::after {
     content: '';
     width: 20px;
     height: 1px;
     background: rgba(255,255,255,0.2);
   }
-
-  .links {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-  }
-
+  .links { display: flex; flex-direction: column; gap: 14px; }
   .btn {
     display: flex;
     align-items: center;
@@ -158,11 +139,11 @@
     overflow: hidden;
     animation: fadeUp 0.8s ease both;
   }
-
   .btn:nth-child(1) { animation-delay: 0.4s; }
   .btn:nth-child(2) { animation-delay: 0.5s; }
-  .btn:nth-child(3) { animation-delay: 0.6s; }
-
+  .btn:nth-child(3) { animation-delay: 0.55s; }
+  .btn:nth-child(4) { animation-delay: 0.6s; }
+  .btn:nth-child(5) { animation-delay: 0.65s; }
   .btn::before {
     content: '';
     position: absolute;
@@ -171,44 +152,41 @@
     transform: translateX(-100%);
     transition: transform 0.4s ease;
   }
-
   .btn:hover::before { transform: translateX(100%); }
-
   .btn:hover {
     border-color: #ff3c00;
     background: rgba(255,60,0,0.08);
     transform: translateX(4px);
     box-shadow: -4px 0 0 #ff3c00;
   }
-
   .btn-icon {
-    width: 36px;
-    height: 36px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    width: 36px; height: 36px;
+    display: flex; align-items: center; justify-content: center;
     flex-shrink: 0;
   }
-
   .btn-icon svg { width: 22px; height: 22px; }
-
   .btn.yt .btn-icon svg { fill: #ff0000; }
   .btn.yt:hover { border-color: #ff0000; box-shadow: -4px 0 0 #ff0000; }
-
   .btn.ig .btn-icon svg { fill: url(#igGrad); }
   .btn.ig:hover { border-color: #c13584; box-shadow: -4px 0 0 #c13584; }
-
+  .btn.ig2 .btn-icon svg { fill: url(#igGrad2); }
+  .btn.ig2:hover { border-color: #8a3ab9; box-shadow: -4px 0 0 #8a3ab9; }
   .btn.ph .btn-icon svg { fill: #00e676; }
   .btn.ph:hover { border-color: #00e676; box-shadow: -4px 0 0 #00e676; }
-
+  .btn-label { display: flex; flex-direction: column; align-items: flex-start; gap: 1px; }
+  .btn-sub {
+    font-size: 9px;
+    letter-spacing: 1px;
+    color: rgba(255,255,255,0.35);
+    text-transform: uppercase;
+    font-weight: 400;
+  }
   .divider {
-    width: 40px;
-    height: 1px;
+    width: 40px; height: 1px;
     background: rgba(255,60,0,0.4);
     margin: 28px auto 0;
     animation: fadeUp 0.8s 0.7s ease both;
   }
-
   .city {
     margin-top: 16px;
     font-size: 11px;
@@ -225,10 +203,13 @@
   <defs>
     <linearGradient id="igGrad" x1="0%" y1="100%" x2="100%" y2="0%">
       <stop offset="0%" stop-color="#f09433"/>
-      <stop offset="25%" stop-color="#e6683c"/>
       <stop offset="50%" stop-color="#dc2743"/>
-      <stop offset="75%" stop-color="#cc2366"/>
       <stop offset="100%" stop-color="#bc1888"/>
+    </linearGradient>
+    <linearGradient id="igGrad2" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#405de6"/>
+      <stop offset="50%" stop-color="#8a3ab9"/>
+      <stop offset="100%" stop-color="#e1306c"/>
     </linearGradient>
   </defs>
 </svg>
@@ -245,21 +226,39 @@
       <span class="btn-icon">
         <svg viewBox="0 0 24 24"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 0 0 .5 6.2C0 8.1 0 12 0 12s0 3.9.5 5.8a3 3 0 0 0 2.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1C24 15.9 24 12 24 12s0-3.9-.5-5.8zM9.7 15.5V8.5l6.3 3.5-6.3 3.5z"/></svg>
       </span>
-      YouTube
+      <span class="btn-label">
+        <span>YouTube</span>
+        <span class="btn-sub">@shaxzoddiyorov</span>
+      </span>
     </a>
 
     <a class="btn ig" href="https://www.instagram.com/shaxzod_diyorov" target="_blank">
       <span class="btn-icon">
         <svg viewBox="0 0 24 24"><path d="M12 2.2c3.2 0 3.6 0 4.9.1 3.3.2 4.8 1.7 5 5 .1 1.3.1 1.7.1 4.9 0 3.2 0 3.6-.1 4.9-.2 3.3-1.7 4.8-5 5-1.3.1-1.7.1-4.9.1-3.2 0-3.6 0-4.9-.1-3.3-.2-4.8-1.7-5-5C2 16.6 2 16.2 2 13c0-3.2 0-3.6.1-4.9.2-3.3 1.7-4.8 5-5C8.4 2.2 8.8 2.2 12 2.2zM12 0C8.7 0 8.3 0 7.1.1 2.7.3.3 2.7.1 7.1.0 8.3 0 8.7 0 12c0 3.3 0 3.7.1 4.9.2 4.4 2.6 6.8 7 7C8.3 24 8.7 24 12 24c3.3 0 3.7 0 4.9-.1 4.4-.2 6.8-2.6 7-7 .1-1.2.1-1.6.1-4.9 0-3.3 0-3.7-.1-4.9C23.7 2.7 21.3.3 16.9.1 15.7 0 15.3 0 12 0zm0 5.8a6.2 6.2 0 1 0 0 12.4A6.2 6.2 0 0 0 12 5.8zm0 10.2a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.4-11.8a1.4 1.4 0 1 0 0 2.8 1.4 1.4 0 0 0 0-2.8z"/></svg>
       </span>
-      Instagram
+      <span class="btn-label">
+        <span>Instagram</span>
+        <span class="btn-sub">@shaxzod_diyorov</span>
+      </span>
+    </a>
+
+    <a class="btn ig2" href="https://www.instagram.com/ethno_uz_instrumental" target="_blank">
+      <span class="btn-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 2.2c3.2 0 3.6 0 4.9.1 3.3.2 4.8 1.7 5 5 .1 1.3.1 1.7.1 4.9 0 3.2 0 3.6-.1 4.9-.2 3.3-1.7 4.8-5 5-1.3.1-1.7.1-4.9.1-3.2 0-3.6 0-4.9-.1-3.3-.2-4.8-1.7-5-5C2 16.6 2 16.2 2 13c0-3.2 0-3.6.1-4.9.2-3.3 1.7-4.8 5-5C8.4 2.2 8.8 2.2 12 2.2zM12 0C8.7 0 8.3 0 7.1.1 2.7.3.3 2.7.1 7.1.0 8.3 0 8.7 0 12c0 3.3 0 3.7.1 4.9.2 4.4 2.6 6.8 7 7C8.3 24 8.7 24 12 24c3.3 0 3.7 0 4.9-.1 4.4-.2 6.8-2.6 7-7 .1-1.2.1-1.6.1-4.9 0-3.3 0-3.7-.1-4.9C23.7 2.7 21.3.3 16.9.1 15.7 0 15.3 0 12 0zm0 5.8a6.2 6.2 0 1 0 0 12.4A6.2 6.2 0 0 0 12 5.8zm0 10.2a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.4-11.8a1.4 1.4 0 1 0 0 2.8 1.4 1.4 0 0 0 0-2.8z"/></svg>
+      </span>
+      <span class="btn-label">
+        <span>Instagram</span>
+        <span class="btn-sub">@ethno_uz_instrumental</span>
+      </span>
     </a>
 
     <a class="btn ph" href="tel:+998904427371">
       <span class="btn-icon">
         <svg viewBox="0 0 24 24"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1L6.6 10.8z"/></svg>
       </span>
-      +998 90 442 73 71
+      <span class="btn-label">
+        <span>+998 90 442 73 71</span>
+      </span>
     </a>
 
   </div>
