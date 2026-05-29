@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>DJ KEYWHEEL</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  body{background:#111;color:#fff;font-family:'Share Tech Mono',monospace;min-height:100vh;display:flex;flex-direction:column;align-items:center}
+  header{width:100%;padding:13px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #222}
+  .logo{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:5px;color:#ff3c00}
+  .info-bar{width:100%;padding:10px 20px;min-height:52px;display:flex;align-items:center;gap:14px;background:#161616;border-bottom:1px solid #222}
+  .info-code{font-family:'Bebas Neue',sans-serif;font-size:30px;color:#ff3c00;min-width:58px;line-height:1}
+  .info-key{font-size:15px;color:#fff;font-family:'Bebas Neue',sans-serif;letter-spacing:3px}
+  .info-sub{font-size:9px;letter-spacing:1.5px;color:#555;text-transform:uppercase;margin-top:2px}
+  .wheel-wrap{padding:14px 0 6px;width:100%;display:flex;justify-content:center}
+  canvas{display:block;touch-action:manipulation;cursor:pointer}
+  .legend{display:grid;grid-template-columns:1fr 1fr;gap:5px 14px;padding:8px 20px;width:100%;max-width:400px}
+  .leg{display:flex;align-items:center;gap:7px;font-size:9px;letter-spacing:1.5px;color:#555;text-transform:uppercase}
+  .leg-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+  .compat{width:100%;max-width:400px;padding:10px 20px 24px}
+  .compat-ttl{font-size:8px;letter-spacing:3px;color:#333;text-transform:uppercase;margin-bottom:8px}
+  .compat-list{display:flex;flex-direction:column;gap:4px}
+  .crow{display:flex;align-items:center;gap:10px;padding:8px 12px;background:#161616;border-left:3px solid transparent}
+  .cdot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+  .ccode{font-family:'Bebas Neue',sans-serif;font-size:20px;min-width:44px;line-height:1}
+  .ckey{font-size:11px;color:#aaa;flex:1}
+  .cname{font-size:8px;color:#444;letter-spacing:1px;text-transform:uppercase}
+  .cbadge{font-size:8px;letter-spacing:1.5px;color:#444;text-transform:uppercase;text-align:right;white-space:nowrap}
+  .empty{font-size:9px;letter-spacing:2px;color:#333;text-transform:uppercase;text-align:center;padding:20px 0}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">CAMELOT WHEEL</div>
+  <div style="font-size:9px;letter-spacing:2px;color:#444">DJ KEY TOOL</div>
+</header>
+
+<div class="info-bar">
+  <div class="info-code" id="icode">—</div>
+  <div>
+    <div class="info-key" id="ikey">выбери тональность</div>
+    <div class="info-sub" id="iname">нажми на сектор колеса</div>
+  </div>
+</div>
+
+<div class="wheel-wrap">
+  <canvas id="c"></canvas>
+</div>
+
+<div class="legend">
+  <div class="leg"><div class="leg-dot" style="background:#00c853"></div>Идеально (±0)</div>
+  <div class="leg"><div class="leg-dot" style="background:#ffd600"></div>Хорошо (±1)</div>
+  <div class="leg"><div class="leg-dot" style="background:#2979ff"></div>Нейтрально (+2)</div>
+  <div class="leg"><div class="leg-dot" style="background:#ff1744"></div>Напряжение (+6)</div>
+</div>
+
+<div class="compat">
+  <div class="compat-ttl">Совместимые тональности</div>
+  <div class="compat-list" id="clist">
+    <div class="empty">↑ выбери тональность на колесе</div>
+  </div>
+</div>
+
+<script>
+const SEGS=[
+  {n:1,  maj:'Ab',  min:'Fm',   mj:'Ab Major',  mn:'F Minor'},
+  {n:2,  maj:'Eb',  min:'Bbm',  mj:'Eb Major',  mn:'Bb Minor'},
+  {n:3,  maj:'Bb',  min:'Gm',   mj:'Bb Major',  mn:'G Minor'},
+  {n:4,  maj:'F',   min:'Dm',   mj:'F Major',   mn:'D Minor'},
+  {n:5,  maj:'C',   min:'Am',   mj:'C Major',   mn:'A Minor'},
+  {n:6,  maj:'G',   min:'Em',   mj:'G Major',   mn:'E Minor'},
+  {n:7,  maj:'D',   min:'Bm',   mj:'D Major',   mn:'B Minor'},
+  {n:8,  maj:'A',   min:'F#m',  mj:'A Major',   mn:'F# Minor'},
+  {n:9,  maj:'E',   min:'C#m',  mj:'E Major',   mn:'C# Minor'},
+  {n:10, maj:'B',   min:'G#m',  mj:'B Major',   mn:'G# Minor'},
+  {n:11, maj:'F#',  min:'D#m',  mj:'F# Major',  mn:'D# Minor'},
+  {n:12, maj:'Db',  min:'Bbm',  mj:'Db Major',  mn:'Bb Minor'},
+];
+
+// Classic Camelot colors — same hue per number, outer brighter, inner darker
+const BASE=[
+  '#c0392b','#e67e22','#f39c12','#27ae60',
+  '#1abc9c','#16a085','#2980b9','#3498db',
+  '#8e44ad','#9b59b6','#e91e63','#d81b60'
+];
+
+let selN=null,selT=null;
+const canvas=document.getElementById('c');
+const ctx=canvas.getContext('2d');
+let S,CX,CY,Ro,Ri,Rc;
+
+function setSizes(){
+  S=Math.min(window.innerWidth-16,390);
+  const dpr=window.devicePixelRatio||1;
+  canvas.width=canvas.height=Math.round(S*dpr);
+  canvas.style.width=canvas.style.height=S+'px';
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  CX=CY=S/2;
+  Ro=S/2-4;
+  Ri=Ro*0.55;
+  Rc=Ro*0.22;
+}
+
+function hexAlpha(hex,a){
+  const r=parseInt(hex.slice(1,3),16);
+  const g=parseInt(hex.slice(3,5),16);
+  const b=parseInt(hex.slice(5,7),16);
+  return `rgba(${r},${g},${b},${a})`;
+}
+
+function getCompat(n,t){
+  if(selN===null) return null;
+  const d=Math.min(Math.abs(n-selN),12-Math.abs(n-selN));
+  if(n===selN&&t===selT) return 'selected';
+  if(n===selN&&t!==selT) return 'perfect';
+  if(d===1&&t===selT) return 'good';
+  if(d===1&&t!==selT) return 'neutral';
+  if(d===6) return 'tension';
+  return null;
+}
+
+const COMPAT_COLORS={
+  selected:'#ff3c00',
+  perfect:'#00c853',
+  good:'#ffd600',
+  neutral:'#2979ff',
+  tension:'#ff1744'
+};
+
+function draw(){
+  ctx.clearRect(0,0,S,S);
+  const slice=(2*Math.PI)/12;
+  const off=-Math.PI/2-slice/2;
+
+  for(let i=0;i<12;i++){
+    const a1=off+i*slice, a2=a1+slice;
+    const seg=SEGS[i];
+    const mid=a1+slice/2;
+    const base=BASE[i];
+
+    const oc=getCompat(seg.n,'maj');
+    const ic=getCompat(seg.n,'min');
+    const oDim=selN!==null&&!oc;
+    const iDim=selN!==null&&!ic;
+
+    // outer fill color
+    const outerFill=oc?COMPAT_COLORS[oc]:base;
+    const innerFill=ic?COMPAT_COLORS[ic]:hexAlpha(base,0.65);
+
+    // draw outer slice
+    drawArc(a1,a2,Ri,Ro,outerFill,oDim);
+    // draw inner slice
+    drawArc(a1,a2,Rc,Ri,innerFill,iDim);
+
+    // OUTER label
+    const outerR=(Ri+Ro)/2;
+    drawLabel(
+      CX+outerR*Math.cos(mid),
+      CY+outerR*Math.sin(mid),
+      mid,
+      seg.n+'B',
+      seg.maj,
+      oDim,
+      Math.max(11,S*0.036),
+      Math.max(10,S*0.030)
+    );
+
+    // INNER label
+    const innerR=(Rc+Ri)/2;
+    drawLabel(
+      CX+innerR*Math.cos(mid),
+      CY+innerR*Math.sin(mid),
+      mid,
+      seg.n+'A',
+      seg.min,
+      iDim,
+      Math.max(9,S*0.030),
+      Math.max(8,S*0.025)
+    );
+  }
+
+  // divider lines between segments
+  for(let i=0;i<12;i++){
+    const a=off+i*slice;
+    ctx.beginPath();
+    ctx.moveTo(CX+Rc*Math.cos(a),CY+Rc*Math.sin(a));
+    ctx.lineTo(CX+Ro*Math.cos(a),CY+Ro*Math.sin(a));
+    ctx.strokeStyle='rgba(0,0,0,0.5)';
+    ctx.lineWidth=1.5;
+    ctx.stroke();
+  }
+
+  // ring divider
+  ctx.beginPath();
+  ctx.arc(CX,CY,Ri,0,2*Math.PI);
+  ctx.strokeStyle='rgba(0,0,0,0.6)';
+  ctx.lineWidth=2;
+  ctx.stroke();
+
+  // outer ring
+  ctx.beginPath();
+  ctx.arc(CX,CY,Ro,0,2*Math.PI);
+  ctx.strokeStyle='rgba(0,0,0,0.8)';
+  ctx.lineWidth=2;
+  ctx.stroke();
+
+  // center
+  ctx.beginPath();
+  ctx.arc(CX,CY,Rc-1,0,2*Math.PI);
+  ctx.fillStyle='#111';
+  ctx.fill();
+  ctx.strokeStyle='#2a2a2a';
+  ctx.lineWidth=1.5;
+  ctx.stroke();
+
+  ctx.textAlign='center';
+  ctx.textBaseline='middle';
+  ctx.font=`bold ${Math.max(11,S*0.036)}px 'Bebas Neue',sans-serif`;
+  ctx.fillStyle='rgba(255,60,0,0.85)';
+  ctx.fillText('CAMELOT',CX,CY-5);
+  ctx.font=`${Math.max(7,S*0.020)}px 'Share Tech Mono',monospace`;
+  ctx.fillStyle='#333';
+  ctx.fillText('KEY WHEEL',CX,CY+8);
+}
+
+function drawArc(a1,a2,r1,r2,color,dim){
+  ctx.beginPath();
+  ctx.arc(CX,CY,r2,a1+0.01,a2-0.01);
+  ctx.arc(CX,CY,r1,a2-0.01,a1+0.01,true);
+  ctx.closePath();
+  ctx.fillStyle=dim?'#1a1a1a':color;
+  ctx.fill();
+  ctx.strokeStyle='rgba(0,0,0,0.4)';
+  ctx.lineWidth=0.5;
+  ctx.stroke();
+}
+
+function drawLabel(x,y,angle,line1,line2,dim,fs1,fs2){
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.rotate(angle+Math.PI/2);
+  ctx.textAlign='center';
+  ctx.textBaseline='middle';
+  ctx.globalAlpha=dim?0.18:1;
+
+  // code (bold)
+  ctx.font=`bold ${fs1}px 'Share Tech Mono',monospace`;
+  ctx.fillStyle='#fff';
+  ctx.fillText(line1,0,-fs1*0.52);
+
+  // key name
+  ctx.font=`${fs2}px 'Share Tech Mono',monospace`;
+  ctx.fillStyle='rgba(255,255,255,0.85)';
+  ctx.fillText(line2,0,fs2*0.58);
+
+  ctx.globalAlpha=1;
+  ctx.restore();
+}
+
+function hitTest(x,y){
+  const dx=x-CX,dy=y-CY;
+  const d=Math.sqrt(dx*dx+dy*dy);
+  if(d<Rc||d>Ro) return null;
+  const slice=(2*Math.PI)/12;
+  const off=-Math.PI/2-slice/2;
+  let a=Math.atan2(dy,dx)-off;
+  if(a<0) a+=2*Math.PI;
+  const idx=Math.floor(a/slice)%12;
+  return{idx,type:d>Ri?'maj':'min'};
+}
+
+function onClick(x,y){
+  const h=hitTest(x,y);
+  if(!h) return;
+  const seg=SEGS[h.idx];
+  selN=seg.n; selT=h.type;
+  updateInfo(seg,h.type);
+  updateCompat();
+  draw();
+}
+
+function updateInfo(seg,t){
+  document.getElementById('icode').textContent=seg.n+(t==='maj'?'B':'A');
+  document.getElementById('ikey').textContent=t==='maj'?seg.maj:seg.min;
+  document.getElementById('iname').textContent=t==='maj'?seg.mj:seg.mn;
+}
+
+function updateCompat(){
+  const n=selN,t=selT;
+  const w=x=>((x-1+12)%12)+1;
+  const opp=t==='maj'?'min':'maj';
+  const rows=[
+    {n,t,           color:'#00c853', badge:'±0',  desc:'Идеально'},
+    {n,t:opp,       color:'#00c853', badge:'±0',  desc:'Параллельная'},
+    {n:w(n+1),t,    color:'#ffd600', badge:'+1',  desc:'Хорошо'},
+    {n:w(n-1),t,    color:'#ffd600', badge:'-1',  desc:'Хорошо'},
+    {n:w(n+1),t:opp,color:'#2979ff', badge:'+2',  desc:'Нейтрально'},
+    {n:w(n+6),t,    color:'#ff1744', badge:'+6',  desc:'Напряжение'},
+  ];
+  document.getElementById('clist').innerHTML=rows.map(r=>{
+    const s=SEGS.find(x=>x.n===r.n);
+    const key=r.t==='maj'?s.maj:s.min;
+    const name=r.t==='maj'?s.mj:s.mn;
+    const code=r.n+(r.t==='maj'?'B':'A');
+    return `<div class="crow" style="border-left-color:${r.color}">
+      <div class="cdot" style="background:${r.color}"></div>
+      <div class="ccode" style="color:${r.color}">${code}</div>
+      <div><div class="ckey">${key}</div><div class="cname">${name}</div></div>
+      <div class="cbadge">${r.badge}&nbsp;${r.desc}</div>
+    </div>`;
+  }).join('');
+}
+
+canvas.addEventListener('click',e=>{
+  const r=canvas.getBoundingClientRect();
+  onClick((e.clientX-r.left)*S/r.width,(e.clientY-r.top)*S/r.height);
+});
+canvas.addEventListener('touchend',e=>{
+  e.preventDefault();
+  const t=e.changedTouches[0],r=canvas.getBoundingClientRect();
+  onClick((t.clientX-r.left)*S/r.width,(t.clientY-r.top)*S/r.height);
+},{passive:false});
+
+window.addEventListener('resize',()=>{ctx.setTransform(1,0,0,1,0,0);setSizes();draw();});
+setSizes();draw();
+</script>
+</body>
+</html>
