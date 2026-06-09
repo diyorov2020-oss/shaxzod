@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SET LIBRARY · по темпу и жанру</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0b0b0e;
+    --bg2:#121217;
+    --card:#16161d;
+    --line:#26262f;
+    --txt:#ece9e1;
+    --mut:#8b887f;
+    --gold:#e3c167;
+    --gold-dim:#9a8542;
+    /* energy band colors */
+    --b-slow:#5b8fb0;
+    --b-mid:#4aa893;
+    --b-dance:#e3c167;
+    --b-punk:#e08454;
+    --b-peak:#e0506e;
+    --b-phonk:#9a7ad0;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    background:var(--bg);
+    color:var(--txt);
+    font-family:'Inter',system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    line-height:1.5;
+    padding-bottom:80px;
+  }
+  .wrap{max-width:860px;margin:0 auto;padding:0 18px}
+
+  /* HEADER */
+  header{padding:46px 0 26px;border-bottom:1px solid var(--line)}
+  .eyebrow{
+    font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.32em;
+    text-transform:uppercase;color:var(--gold-dim);margin-bottom:14px;
+  }
+  h1{
+    font-family:'Bebas Neue',sans-serif;font-weight:400;
+    font-size:clamp(48px,11vw,92px);line-height:.92;letter-spacing:.01em;
+    color:var(--txt);
+  }
+  h1 .g{color:var(--gold)}
+  .sub{color:var(--mut);font-size:14px;margin-top:14px;max-width:560px}
+
+  /* TEMPO RULER */
+  .ruler{margin:30px 0 6px}
+  .ruler-label{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.2em;color:var(--mut);text-transform:uppercase;margin-bottom:8px}
+  .ruler-track{position:relative;height:6px;border-radius:3px;
+    background:linear-gradient(90deg,var(--b-slow),var(--b-mid),var(--b-dance),var(--b-punk),var(--b-peak));}
+  .ruler-ticks{display:flex;justify-content:space-between;margin-top:6px}
+  .ruler-ticks span{font-family:'Space Mono',monospace;font-size:10px;color:var(--mut)}
+
+  /* CONTROLS */
+  .controls{display:flex;flex-wrap:wrap;gap:8px;margin:26px 0 8px;align-items:center}
+  .search{
+    flex:1 1 180px;min-width:160px;background:var(--bg2);border:1px solid var(--line);
+    color:var(--txt);padding:10px 13px;border-radius:9px;font-size:13px;font-family:'Inter',sans-serif;
+  }
+  .search::placeholder{color:var(--mut)}
+  .search:focus{outline:none;border-color:var(--gold-dim)}
+  .filters{display:flex;flex-wrap:wrap;gap:7px;width:100%}
+  .chip{
+    background:transparent;border:1px solid var(--line);color:var(--mut);
+    padding:7px 12px;border-radius:20px;font-size:12px;font-family:'Space Mono',monospace;
+    letter-spacing:.04em;cursor:pointer;transition:.15s;white-space:nowrap;
+  }
+  .chip:hover{border-color:var(--gold-dim);color:var(--txt)}
+  .chip.active{background:var(--gold);border-color:var(--gold);color:#1a1709;font-weight:700}
+  .count{font-family:'Space Mono',monospace;font-size:11px;color:var(--mut);margin-left:auto}
+
+  /* SECTIONS */
+  section{margin-top:38px}
+  .sec-head{display:flex;align-items:baseline;gap:12px;margin-bottom:4px}
+  .sec-dot{width:11px;height:11px;border-radius:50%;flex:none;transform:translateY(1px)}
+  .sec-title{font-family:'Bebas Neue',sans-serif;font-size:27px;letter-spacing:.02em}
+  .sec-bpm{font-family:'Space Mono',monospace;font-size:11px;color:var(--mut);margin-left:auto;white-space:nowrap}
+  .sec-note{font-size:12.5px;color:var(--mut);margin:4px 0 14px;padding-left:23px}
+  .sec-note.warn{color:var(--b-phonk)}
+
+  /* TRACK */
+  .track{
+    display:grid;grid-template-columns:1fr auto;gap:4px 14px;align-items:center;
+    padding:11px 14px;background:var(--card);border:1px solid var(--line);
+    border-radius:11px;margin-bottom:7px;border-left:3px solid var(--bd,var(--line));
+  }
+  .t-main{min-width:0}
+  .t-name{font-size:14.5px;font-weight:600;color:var(--txt)}
+  .t-meta{font-size:12px;color:var(--mut);margin-top:2px}
+  .t-genre{color:var(--gold-dim)}
+  .t-right{display:flex;flex-direction:column;align-items:flex-end;gap:5px;min-width:118px}
+  .bpm{font-family:'Space Mono',monospace;font-size:13px;font-weight:700;color:var(--txt)}
+  .bpm small{color:var(--mut);font-weight:400;font-size:10px}
+  .bar{width:108px;height:4px;border-radius:2px;background:var(--bg2);position:relative;overflow:hidden}
+  .bar i{position:absolute;top:0;bottom:0;left:0;border-radius:2px}
+  .dup{font-size:10px;color:var(--b-punk);font-family:'Space Mono',monospace}
+
+  footer{margin-top:46px;padding-top:20px;border-top:1px solid var(--line);
+    font-size:12px;color:var(--mut);line-height:1.7}
+  footer b{color:var(--gold-dim);font-weight:600}
+  .empty{text-align:center;color:var(--mut);padding:50px 0;font-family:'Space Mono',monospace;font-size:13px}
+
+  @media(max-width:520px){
+    .t-right{min-width:96px}
+    .bar{width:84px}
+    .sec-bpm{display:none}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow">DIYOROV PRODUCTION · SET LIBRARY</div>
+    <h1>ПО ТЕМПУ<br>И <span class="g">ЖАНРУ</span></h1>
+    <p class="sub">Плейлист, разложенный по энергии — от медляка к пику. BPM приблизительный, ориентир для построения сета. Точные значения подтверди после анализа в Rekordbox.</p>
+
+    <div class="ruler">
+      <div class="ruler-label">Шкала энергии · BPM</div>
+      <div class="ruler-track"></div>
+      <div class="ruler-ticks"><span>60</span><span>90</span><span>110</span><span>125</span><span>140</span><span>160</span></div>
+    </div>
+  </header>
+
+  <div class="controls">
+    <input id="search" class="search" type="text" placeholder="Поиск по названию или артисту…" />
+    <span class="count" id="count"></span>
+    <div class="filters" id="filters"></div>
+  </div>
+
+  <div id="list"></div>
+
+  <footer>
+    <b>Заметки.</b> «Every Breath You Take» в списке дублировался — оставлен один раз. «Тут там» (Лазарев) — проверь точное название/версию. Фонк-блок и поп-панк по энергии конфликтуют с поп-ядром: фонк держи в резерве, поп-панк ставь одним «выбросом» на пике. Тёмный фонк-блок («тёмная» тематика) — для молодёжной/семейной аудитории включай осознанно и коротко, только если зал сам туда тянет.
+  </footer>
+
+</div>
+
+<script>
+const BANDS = {
+  slow:  {name:'Баллады / Медляк',      bpm:'≈ 65–95',   color:'var(--b-slow)',  note:'Медленные окна, начало и финал вечера.'},
+  mid:   {name:'Мид-темп / Вайб',        bpm:'≈ 90–115',  color:'var(--b-mid)',   note:'Связки между блоками, лёгкий движ, «под разговор».'},
+  dance: {name:'Танцевальные / Прайм-тайм', bpm:'≈ 115–130', color:'var(--b-dance)', note:'Ядро танцпола.'},
+  punk:  {name:'Рус. поп-панк / Эмо',    bpm:'высокая энергия', color:'var(--b-punk)', note:'Орут хором — держать вместе, один мощный блок.'},
+  peak:  {name:'Пик-энергия',            bpm:'128+',      color:'var(--b-peak)',  note:'Точка максимума.'},
+  phonk: {name:'Фонк / Тёмный блок',     bpm:'≈ 140–160', color:'var(--b-phonk)', note:'Другая энергия и тяжёлая тематика — осознанно и коротко, в резерве.', warn:true},
+};
+
+// bpm приблизительный; флаг q = под вопросом
+const T = [
+  // SLOW
+  ['Careless Whisper','George Michael','соул-поп',77,'slow'],
+  ['Purple Rain','Prince','рок-баллада',113,'slow'],
+  ['Iris','Goo Goo Dolls','рок-баллада',95,'slow'],
+  ['7 Seconds','Youssou N\'Dour','world / соул',90,'slow'],
+  ['Can\'t Pretend','Tom Odell','фортепиано-баллада',76,'slow'],
+  ['That Should Be Me','Justin Bieber','поп-баллада',88,'slow'],
+  ['Young and Beautiful','Lana Del Rey','поп (half-time)',111,'slow'],
+  ['Обезоружена','Полина Гагарина','поп-баллада',75,'slow'],
+  ['Баллада','Мот','рэп-баллада',85,'slow'],
+  ['Самая самая','Егор Крид','поп-баллада',90,'slow'],
+  // MID
+  ['Shape of You','Ed Sheeran','дэнсхолл-поп',96,'mid'],
+  ['Closer','The Chainsmokers','фьюче-бэйс поп',95,'mid'],
+  ['Why\'d You Only Call Me When You\'re High','Arctic Monkeys','инди-рок',92,'mid'],
+  ['Stand By Me','Ben E. King','соул-классика',118,'mid'],
+  ['Forever Young','Alphaville','синтипоп',100,'mid'],
+  ['End of Beginning','Djo','инди',110,'mid'],
+  ['Babydoll','Dominic Fike','инди-поп',105,'mid'],
+  ['Tongue Tied','Grouplove','инди-поп',110,'mid'],
+  ['Утро','Дайте танк (!)','пост-панк / инди',100,'mid'],
+  ['Кухни','Бонд с кнопкой','бедрум-поп',95,'mid'],
+  ['Стыцамен','Иван Дорн','фанк-поп',110,'mid'],
+  ['Жить в кайф','Макс Корж','хип-хоп / поп',100,'mid'],
+  ['Слово пацана','Макс Корж','хип-хоп',95,'mid'],
+  ['Raindance','Dave, Tems','хип-хоп / R&B',100,'mid'],
+  ['Вселенная бесконечна','Noize MC','хип-хоп',95,'mid'],
+  ['Настоящая','Ваня Дмитриенко','поп',100,'mid'],
+  ['Куда уходит детство','ВИА Сливки','поп',100,'mid'],
+  ['Ты случилась','Мартин','поп',98,'mid'],
+  // DANCE
+  ['90','Pompeya','инди-дэнс',120,'dance'],
+  ['Every Breath You Take','The Police','поп-рок',117,'dance'],
+  ['I Love It','Icona Pop','дэнс-поп',126,'dance'],
+  ['Last Friday Night','Katy Perry','поп',126,'dance'],
+  ['Beauty and a Beat','Justin Bieber','EDM-поп',128,'dance'],
+  ['The One That Got Away','Katy Perry','поп',134,'dance'],
+  ['Многоэтажки','5sta Family','рус-поп / дэнс',128,'dance'],
+  ['Ты так красива','5sta Family','рус-поп',125,'dance'],
+  ['Маршрутка','IOWA','поп',125,'dance'],
+  ['Танцы','ssshhhiiittt!','хайперпоп / дэнс',130,'dance'],
+  ['Кустурица','—','балкан-дэнс',130,'dance'],
+  ['Мне нравится','Егор Крид','поп',120,'dance'],
+  ['Будильник','Егор Крид','поп',120,'dance'],
+  ['Jealous','Егор Крид','поп',118,'dance'],
+  ['Выпускной','Егор Крид','поп',120,'dance'],
+  ['Шарады','Мот и Егор Крид','поп',120,'dance'],
+  ['Она не твоя','Мот','поп',120,'dance'],
+  ['Танцуй самбу','Danial','дэнс',122,'dance'],
+  ['Минус дистанция','Daniela','дэнс',124,'dance'],
+  ['Фантом','Akva','поп',122,'dance'],
+  ['Ночной круиз','K.KRASH','хип-хоп / дэнс',120,'dance'],
+  ['Режиссёр','Градусы','поп',122,'dance'],
+  ['Девочка в классе','Джизус','рэп',120,'dance'],
+  ['Выпускной','Баста','хип-хоп',120,'dance'],
+  ['Baby','Justin Bieber','поп',130,'dance'],
+  ['Alena — Ярмарка судеб (ремикс)','—','дэнс',124,'dance'],
+  ['Тут там','Сергей Лазарев','поп',120,'dance',true],
+  // PUNK
+  ['Лаэла','Нервы','поп-панк',150,'punk'],
+  ['Глупая','Нервы','поп-панк',140,'punk'],
+  ['Слишком влюблён','Нервы','поп-панк',145,'punk'],
+  ['Нервы','Нервы','поп-панк',140,'punk'],
+  ['Горы по колено','Макс Корж','хип-хоп / панк-энергия',130,'punk'],
+  // PEAK
+  ['Gangnam Style','PSY','K-pop / дэнс',132,'peak'],
+  // PHONK
+  ['Armor Club 2','FORTUNA 812','фонк',150,'phonk'],
+  ['Порезы на руках','FORTUNA 812','фонк',155,'phonk'],
+  ['princeofscale','FORTUNA 812','фонк',150,'phonk'],
+  ['Overdose Чувств','тёмный принц','фонк',145,'phonk'],
+  ['Папа','тёмный принц','фонк',150,'phonk'],
+];
+
+const MIN=58, MAX=162;
+const pct = b => Math.max(0,Math.min(100,((b-MIN)/(MAX-MIN))*100));
+const ORDER = ['slow','mid','dance','punk','peak','phonk'];
+
+let active='all', q='';
+
+function render(){
+  const list=document.getElementById('list');
+  list.innerHTML='';
+  let shown=0;
+  const ql=q.trim().toLowerCase();
+
+  ORDER.forEach(bk=>{
+    if(active!=='all' && active!==bk) return;
+    const band=BANDS[bk];
+    let rows=T.filter(t=>t[4]===bk);
+    if(ql) rows=rows.filter(t=>(t[0]+' '+t[1]).toLowerCase().includes(ql));
+    if(!rows.length) return;
+    shown+=rows.length;
+
+    const sec=document.createElement('section');
+    sec.innerHTML=`
+      <div class="sec-head">
+        <span class="sec-dot" style="background:${band.color}"></span>
+        <span class="sec-title">${band.name}</span>
+        <span class="sec-bpm">${band.bpm} BPM</span>
+      </div>
+      <div class="sec-note ${band.warn?'warn':''}">${band.note}</div>`;
+    rows.forEach(t=>{
+      const [name,art,genre,bpm,,qflag]=t;
+      const d=document.createElement('div');
+      d.className='track';
+      d.style.setProperty('--bd',band.color);
+      d.innerHTML=`
+        <div class="t-main">
+          <div class="t-name">${name}${qflag?' <span class="dup">проверь</span>':''}</div>
+          <div class="t-meta">${art} · <span class="t-genre">${genre}</span></div>
+        </div>
+        <div class="t-right">
+          <div class="bpm">${bpm} <small>BPM</small></div>
+          <div class="bar"><i style="width:${pct(bpm)}%;background:${band.color}"></i></div>
+        </div>`;
+      sec.appendChild(d);
+    });
+    list.appendChild(sec);
+  });
+
+  if(!shown) list.innerHTML='<div class="empty">Ничего не найдено</div>';
+  document.getElementById('count').textContent=shown+' треков';
+}
+
+// build filter chips
+const F=document.getElementById('filters');
+const chips=[['all','Все']].concat(ORDER.map(k=>[k,BANDS[k].name]));
+chips.forEach(([k,label],i)=>{
+  const b=document.createElement('button');
+  b.className='chip'+(i===0?' active':'');
+  b.textContent=label;
+  b.onclick=()=>{active=k;document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));b.classList.add('active');render();};
+  F.appendChild(b);
+});
+document.getElementById('search').addEventListener('input',e=>{q=e.target.value;render();});
+render();
+</script>
+</body>
+</html>
