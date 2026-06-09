@@ -1,0 +1,506 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Шумометр — Diyorov Production</title>
+<style>
+  :root{
+    --bg:#060606;
+    --panel:rgba(20,20,22,.78);
+    --line:#26262b;
+    --gold:#e8c66b;
+    --gold-dim:#7a6a38;
+    --text:#f3f1ea;
+    --dim:#8b8b90;
+    --green:#3ad17a;
+    --amber:#f2d544;
+    --orange:#ff9f1c;
+    --red:#ff4d4d;
+    --track:#1c1c20;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    background:
+      radial-gradient(120% 120% at 50% 18%, #121214 0%, var(--bg) 60%);
+    color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",Arial,sans-serif;
+    overflow:hidden;
+    -webkit-user-select:none;user-select:none;
+  }
+  /* numbers don't jitter as digits change width */
+  .num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1;}
+
+  #app{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
+
+  /* ---------- START SCREEN ---------- */
+  #start{
+    position:fixed;inset:0;z-index:40;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:26px;text-align:center;padding:24px;
+    background:radial-gradient(120% 120% at 50% 20%, #131315 0%, var(--bg) 70%);
+  }
+  #start h1{
+    font-size:clamp(28px,5.5vmin,56px);font-weight:800;letter-spacing:.04em;
+  }
+  #start h1 span{color:var(--gold)}
+  #start p{color:var(--dim);max-width:560px;font-size:clamp(13px,2vmin,17px);line-height:1.55}
+  #startBtn{
+    margin-top:6px;
+    font-size:clamp(18px,3vmin,26px);font-weight:700;letter-spacing:.02em;
+    color:#1a1505;background:linear-gradient(180deg,#f0d27e,#d9b452);
+    border:none;border-radius:999px;padding:.7em 2em;cursor:pointer;
+    box-shadow:0 10px 40px rgba(216,180,82,.28);transition:transform .12s ease, box-shadow .12s ease;
+  }
+  #startBtn:hover{transform:translateY(-2px);box-shadow:0 14px 50px rgba(216,180,82,.38)}
+  #startBtn:active{transform:translateY(0)}
+  .hint{font-size:clamp(11px,1.7vmin,13px);color:var(--gold-dim)}
+
+  /* ---------- METER ---------- */
+  #meter{position:fixed;inset:0;display:none;align-items:center;justify-content:center}
+  .zoneLabel{
+    position:absolute;top:5vmin;left:0;right:0;text-align:center;
+    font-size:clamp(14px,3vmin,30px);font-weight:700;letter-spacing:.32em;
+    color:var(--dim);text-transform:uppercase;transition:color .2s ease;
+  }
+  .gaugeWrap{position:relative;width:min(86vmin,86vw);aspect-ratio:1/1;display:flex;align-items:center;justify-content:center}
+  svg.gauge{width:100%;height:100%;display:block}
+  .track{fill:none;stroke:var(--track);stroke-width:22;stroke-linecap:round}
+  .progress{fill:none;stroke:var(--green);stroke-width:22;stroke-linecap:round;transition:stroke .25s linear}
+  .peak{fill:none;stroke:#fff;stroke-width:24;stroke-linecap:round;opacity:.9}
+  .tick{stroke:#3a3a40;stroke-width:2}
+  .ticktxt{fill:var(--dim);font-size:13px;font-weight:600}
+
+  .center{position:absolute;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1}
+  .bigNum{font-size:clamp(56px,23vmin,260px);font-weight:800;letter-spacing:-.02em;color:var(--green);transition:color .2s ease}
+  .unit{font-size:clamp(16px,4vmin,40px);font-weight:700;color:var(--dim);margin-top:-.15em}
+  .sub{margin-top:1.4vmin;font-size:clamp(11px,1.9vmin,17px);color:var(--dim);letter-spacing:.06em}
+  .sub b{color:var(--gold)}
+
+  /* corner readouts */
+  .stat{position:absolute;top:5vmin;display:flex;flex-direction:column;gap:.2em}
+  .stat .k{font-size:clamp(10px,1.5vmin,13px);letter-spacing:.18em;color:var(--dim);text-transform:uppercase}
+  .stat .v{font-size:clamp(20px,4.5vmin,46px);font-weight:800;color:var(--gold)}
+  #statMax{right:6vmin;text-align:right;align-items:flex-end}
+  #statPeak{left:6vmin;text-align:left;align-items:flex-start}
+
+  /* spectrum */
+  #spectrum{position:absolute;left:0;right:0;bottom:0;width:100%;height:16vmin;display:block;opacity:.9}
+
+  .brand{
+    position:absolute;left:2.4vmin;bottom:2vmin;font-size:clamp(10px,1.5vmin,14px);
+    letter-spacing:.22em;color:var(--gold-dim);text-transform:uppercase;font-weight:600;pointer-events:none;
+  }
+
+  /* ---------- CONTROLS (auto-hide) ---------- */
+  #controls{
+    position:fixed;left:50%;bottom:3vmin;transform:translateX(-50%);
+    z-index:30;display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:center;
+    background:var(--panel);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    border:1px solid var(--line);border-radius:16px;padding:10px 12px;
+    max-width:94vw;
+    transition:opacity .4s ease, transform .4s ease;
+  }
+  .hideUI #controls{opacity:0;transform:translate(-50%,14px);pointer-events:none}
+  .hideUI{cursor:none}
+  .ctl{display:flex;align-items:center;gap:7px}
+  .ctl label{font-size:12px;color:var(--dim);letter-spacing:.04em}
+  button.btn,select{
+    font:inherit;font-size:13px;color:var(--text);background:#16161a;border:1px solid var(--line);
+    border-radius:10px;padding:8px 12px;cursor:pointer;transition:border-color .15s ease,background .15s ease;
+  }
+  button.btn:hover,select:hover{border-color:var(--gold-dim)}
+  button.btn.active{color:#1a1505;background:linear-gradient(180deg,#f0d27e,#d9b452);border-color:transparent;font-weight:700}
+  select{max-width:34vw}
+  input[type=range]{accent-color:var(--gold);width:120px}
+  .seg{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  .seg button{border:none;border-radius:0;background:#16161a;padding:8px 12px;font-size:13px}
+  .seg button + button{border-left:1px solid var(--line)}
+  .calVal{min-width:62px;text-align:center;color:var(--gold);font-weight:700;font-size:13px}
+
+  /* ---------- ERROR ---------- */
+  #err{
+    position:fixed;inset:0;z-index:50;display:none;flex-direction:column;align-items:center;justify-content:center;
+    gap:18px;text-align:center;padding:30px;background:rgba(6,6,6,.96)
+  }
+  #err h2{color:var(--red);font-size:clamp(20px,4vmin,32px)}
+  #err p{color:var(--dim);max-width:520px;line-height:1.6;font-size:clamp(13px,2vmin,16px)}
+  #err code{color:var(--gold);background:#16161a;padding:2px 7px;border-radius:6px;font-size:.92em}
+  #err button{font:inherit;font-weight:700;color:#1a1505;background:linear-gradient(180deg,#f0d27e,#d9b452);border:none;border-radius:999px;padding:.6em 1.6em;cursor:pointer}
+
+  .kbd{display:inline-block;border:1px solid var(--line);border-bottom-width:2px;border-radius:6px;padding:1px 7px;font-size:.85em;color:var(--text);background:#141418}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- START -->
+  <div id="start">
+    <h1>ШУМО<span>МЕТР</span></h1>
+    <p>Уровень звука в реальном времени — для вывода на большой экран через HDMI.
+       Нажмите «Старт» и разрешите доступ к микрофону.</p>
+    <button id="startBtn">▶ Старт</button>
+    <div class="hint">Горячие клавиши: <span class="kbd">F</span> полный экран · <span class="kbd">R</span> сброс · <span class="kbd">Пробел</span> пауза</div>
+    <p class="hint" style="color:var(--dim);max-width:520px">Совет: чтобы браузер дал доступ к микрофону, откройте файл через <b style="color:var(--gold)">https</b> (GitHub Pages) или <b style="color:var(--gold)">localhost</b>. При первом запуске macOS спросит разрешение на микрофон для браузера.</p>
+  </div>
+
+  <!-- METER -->
+  <div id="meter">
+    <div class="zoneLabel" id="zoneLabel">—</div>
+
+    <div class="stat" id="statPeak"><div class="k">Пик</div><div class="v num" id="peakVal">–</div></div>
+    <div class="stat" id="statMax"><div class="k">Макс</div><div class="v num" id="maxVal">–</div></div>
+
+    <div class="gaugeWrap">
+      <svg class="gauge" viewBox="0 0 400 400" preserveAspectRatio="xMidYMid meet">
+        <path class="track" id="trackPath"></path>
+        <g id="ticks"></g>
+        <path class="progress" id="progPath"></path>
+        <path class="peak" id="peakPath"></path>
+      </svg>
+      <div class="center">
+        <div class="bigNum num" id="bigNum">--</div>
+        <div class="unit">dB</div>
+        <div class="sub">режим <b id="weightLbl">МЕДЛЕННО</b> · <span class="num" id="dbfs">-- dBFS</span></div>
+      </div>
+    </div>
+
+    <canvas id="spectrum"></canvas>
+    <div class="brand">Diyorov Production</div>
+  </div>
+
+  <!-- CONTROLS -->
+  <div id="controls">
+    <div class="ctl">
+      <label for="device">Вход</label>
+      <select id="device"><option value="">Микрофон по умолчанию</option></select>
+    </div>
+    <div class="seg" id="weightSeg">
+      <button data-tau="0.125">Быстро</button>
+      <button data-tau="1.0" class="active">Медленно</button>
+    </div>
+    <div class="ctl">
+      <label for="cal">Калибровка</label>
+      <input type="range" id="cal" min="60" max="130" step="1" value="100">
+      <span class="calVal num" id="calVal">+100</span>
+    </div>
+    <button class="btn" id="resetBtn">Сброс</button>
+    <button class="btn" id="fsBtn">⛶ Экран</button>
+  </div>
+
+  <!-- ERROR -->
+  <div id="err">
+    <h2>Нет доступа к микрофону</h2>
+    <p id="errMsg"></p>
+    <p>Откройте страницу через <code>https</code> (например, GitHub Pages) или через <code>localhost</code>
+       (<code>python3 -m http.server</code> → <code>http://localhost:8000</code>), затем разрешите микрофон.
+       На Mac проверьте: Системные настройки → Конфиденциальность → Микрофон → ваш браузер.</p>
+    <button id="errRetry">Повторить</button>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  "use strict";
+
+  // ---- elements ----
+  const $ = id => document.getElementById(id);
+  const startScreen = $("start"), meter = $("meter"), errBox = $("err");
+  const bigNum = $("bigNum"), unitDbfs = $("dbfs"), zoneLabel = $("zoneLabel");
+  const peakVal = $("peakVal"), maxVal = $("maxVal"), weightLbl = $("weightLbl");
+  const progPath = $("progPath"), peakPath = $("peakPath"), trackPath = $("trackPath"), ticksG = $("ticks");
+  const deviceSel = $("device"), calRange = $("cal"), calVal = $("calVal");
+  const spectrum = $("spectrum"), sctx = spectrum.getContext("2d");
+
+  // ---- gauge geometry (270° arc, gap at bottom) ----
+  const CX = 200, CY = 200, R = 150;
+  const A0 = -135, A1 = 135;           // start / end angle (deg, 0 = top, clockwise)
+  const DB_MIN = 30, DB_MAX = 120;     // gauge scale
+
+  const pt = (cx, cy, r, deg) => {
+    const a = (deg - 90) * Math.PI / 180;
+    return { x: cx + r * Math.cos(a), y: cy + r * Math.sin(a) };
+  };
+  const arc = (r, start, end) => {
+    const s = pt(CX, CY, r, start), e = pt(CX, CY, r, end);
+    const large = (end - start) > 180 ? 1 : 0;
+    return `M ${s.x.toFixed(2)} ${s.y.toFixed(2)} A ${r} ${r} 0 ${large} 1 ${e.x.toFixed(2)} ${e.y.toFixed(2)}`;
+  };
+  const dbToFrac = db => Math.max(0, Math.min(1, (db - DB_MIN) / (DB_MAX - DB_MIN)));
+  const dbToAngle = db => A0 + (A1 - A0) * dbToFrac(db);
+
+  trackPath.setAttribute("d", arc(R, A0, A1));
+
+  // ticks + labels
+  [40, 60, 80, 100, 120].forEach(v => {
+    const ang = dbToAngle(v);
+    const a = pt(CX, CY, R - 16, ang), b = pt(CX, CY, R + 2, ang), t = pt(CX, CY, R + 26, ang);
+    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    line.setAttribute("class", "tick");
+    line.setAttribute("x1", a.x); line.setAttribute("y1", a.y);
+    line.setAttribute("x2", b.x); line.setAttribute("y2", b.y);
+    ticksG.appendChild(line);
+    const txt = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    txt.setAttribute("class", "ticktxt");
+    txt.setAttribute("x", t.x); txt.setAttribute("y", t.y);
+    txt.setAttribute("text-anchor", "middle"); txt.setAttribute("dominant-baseline", "middle");
+    txt.textContent = v;
+    ticksG.appendChild(txt);
+  });
+
+  // ---- colour zones ----
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  function zoneColor(db) {
+    if (db < 70) return css("--green");
+    if (db < 85) return css("--amber");
+    if (db < 100) return css("--orange");
+    return css("--red");
+  }
+  function zoneName(db) {
+    if (db < 70) return "Тихо";
+    if (db < 85) return "Умеренно";
+    if (db < 100) return "Громко";
+    return "Очень громко";
+  }
+
+  // ---- audio state ----
+  let audioCtx = null, analyser = null, srcNode = null, stream = null, raf = 0;
+  let timeBuf = null, freqBuf = null;
+  let smoothPower = 1e-9;     // averaged power (linear)
+  let tau = 1.0;             // time weighting: 1.0 slow, 0.125 fast
+  let calOffset = 100;       // dB offset added to dBFS
+  let peakDb = -Infinity, peakTime = 0, maxDb = -Infinity;
+  let lastTs = 0, running = false, paused = false;
+
+  const SPECTRUM_BANDS = 72, F_MIN = 30, F_MAX = 16000;
+
+  async function listDevices() {
+    try {
+      const devs = (await navigator.mediaDevices.enumerateDevices())
+        .filter(d => d.kind === "audioinput");
+      deviceSel.innerHTML = "";
+      const def = document.createElement("option");
+      def.value = ""; def.textContent = "Микрофон по умолчанию";
+      deviceSel.appendChild(def);
+      devs.forEach((d, i) => {
+        const o = document.createElement("option");
+        o.value = d.deviceId;
+        o.textContent = d.label || `Вход ${i + 1}`;
+        deviceSel.appendChild(o);
+      });
+    } catch (e) { /* ignore */ }
+  }
+
+  async function start(deviceId) {
+    stopStream();
+
+    const ideal = {
+      echoCancellation: false,
+      noiseSuppression: false,
+      autoGainControl: false,   // keep the true signal level
+    };
+    // only treat as a real device id (ignore the "default" placeholder text)
+    const wantId = deviceId && deviceId !== "Микрофон по умолчанию";
+
+    const attempts = [];
+    if (wantId) attempts.push({ audio: { ...ideal, deviceId: { exact: deviceId } } });
+    attempts.push({ audio: ideal });   // default mic, preferred flags
+    attempts.push({ audio: true });    // last resort: whatever the browser gives
+
+    stream = null; let lastErr = null;
+    for (const c of attempts) {
+      try { stream = await navigator.mediaDevices.getUserMedia(c); break; }
+      catch (e) { lastErr = e; }
+    }
+    if (!stream) { showError(lastErr); return; }
+
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === "suspended") await audioCtx.resume();
+
+    srcNode = audioCtx.createMediaStreamSource(stream);
+    analyser = audioCtx.createAnalyser();
+    analyser.fftSize = 4096;
+    analyser.smoothingTimeConstant = 0.82;   // affects spectrum only
+    srcNode.connect(analyser);
+
+    timeBuf = new Float32Array(analyser.fftSize);
+    freqBuf = new Uint8Array(analyser.frequencyBinCount);
+
+    errBox.style.display = "none";
+    startScreen.style.display = "none";
+    meter.style.display = "flex";
+    sizeCanvas();
+    listDevices();
+
+    running = true; paused = false; lastTs = performance.now();
+    cancelAnimationFrame(raf);
+    raf = requestAnimationFrame(loop);
+    armAutoHide();
+  }
+
+  function stopStream() {
+    if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+    if (srcNode) { try { srcNode.disconnect(); } catch (e) {} srcNode = null; }
+  }
+
+  function loop(ts) {
+    raf = requestAnimationFrame(loop);
+    if (!running || paused || !analyser) return;
+
+    const dt = Math.min(0.1, (ts - lastTs) / 1000) || 0.016;
+    lastTs = ts;
+
+    // RMS -> dBFS (average power, exponential time weighting)
+    analyser.getFloatTimeDomainData(timeBuf);
+    let sum = 0;
+    for (let i = 0; i < timeBuf.length; i++) sum += timeBuf[i] * timeBuf[i];
+    const instPower = sum / timeBuf.length;
+
+    const alpha = 1 - Math.exp(-dt / tau);
+    smoothPower += alpha * (instPower - smoothPower);
+
+    const dbfs = 10 * Math.log10(smoothPower + 1e-12);   // ~ -inf .. 0
+    let db = dbfs + calOffset;
+    db = Math.max(0, Math.min(140, db));
+
+    // peak (hold then decay) + session max
+    if (db >= peakDb) { peakDb = db; peakTime = ts; }
+    else if (ts - peakTime > 1400) { peakDb = Math.max(db, peakDb - 14 * dt); }
+    if (db > maxDb) maxDb = db;
+
+    // ---- paint numbers ----
+    const col = zoneColor(db);
+    bigNum.textContent = Math.round(db);
+    bigNum.style.color = col;
+    unitDbfs.textContent = dbfs.toFixed(1) + " dBFS";
+    zoneLabel.textContent = zoneName(db);
+    zoneLabel.style.color = col;
+    peakVal.textContent = isFinite(peakDb) ? Math.round(peakDb) : "–";
+    maxVal.textContent = isFinite(maxDb) ? Math.round(maxDb) : "–";
+
+    // ---- paint gauge ----
+    const ang = dbToAngle(db);
+    progPath.setAttribute("d", arc(R, A0, ang));
+    progPath.style.stroke = col;
+    if (isFinite(peakDb) && peakDb > DB_MIN) {
+      const pa = dbToAngle(peakDb);
+      peakPath.setAttribute("d", arc(R, Math.max(A0, pa - 1.2), Math.min(A1, pa + 1.2)));
+      peakPath.style.display = "";
+    } else { peakPath.style.display = "none"; }
+
+    drawSpectrum();
+  }
+
+  // ---- spectrum (log-spaced bands) ----
+  function drawSpectrum() {
+    if (!analyser) return;
+    analyser.getByteFrequencyData(freqBuf);
+    const w = spectrum.width, h = spectrum.height, dpr = window.devicePixelRatio || 1;
+    sctx.clearRect(0, 0, w, h);
+
+    const nyquist = audioCtx.sampleRate / 2;
+    const bins = analyser.frequencyBinCount;
+    const gap = 2 * dpr;
+    const bw = w / SPECTRUM_BANDS;
+
+    for (let i = 0; i < SPECTRUM_BANDS; i++) {
+      const f0 = F_MIN * Math.pow(F_MAX / F_MIN, i / SPECTRUM_BANDS);
+      const f1 = F_MIN * Math.pow(F_MAX / F_MIN, (i + 1) / SPECTRUM_BANDS);
+      let b0 = Math.floor(f0 / nyquist * bins);
+      let b1 = Math.max(b0 + 1, Math.floor(f1 / nyquist * bins));
+      b1 = Math.min(b1, bins);
+      let m = 0;
+      for (let b = b0; b < b1; b++) m = Math.max(m, freqBuf[b]);
+      const v = m / 255;
+      const bh = Math.max(2 * dpr, v * h);
+      const x = i * bw;
+      const grad = sctx.createLinearGradient(0, h, 0, h - bh);
+      grad.addColorStop(0, "rgba(122,106,56,.35)");
+      grad.addColorStop(1, "rgba(232,198,107,.95)");
+      sctx.fillStyle = grad;
+      sctx.fillRect(x + gap / 2, h - bh, bw - gap, bh);
+    }
+  }
+
+  function sizeCanvas() {
+    const dpr = window.devicePixelRatio || 1;
+    spectrum.width = Math.floor(spectrum.clientWidth * dpr);
+    spectrum.height = Math.floor(spectrum.clientHeight * dpr);
+  }
+  window.addEventListener("resize", () => { if (running) sizeCanvas(); });
+
+  function resetPeaks() { peakDb = -Infinity; maxDb = -Infinity; peakTime = 0; }
+
+  // ---- error ----
+  function showError(e) {
+    startScreen.style.display = "none";
+    meter.style.display = "none";
+    errBox.style.display = "flex";
+    const map = {
+      NotAllowedError: "Доступ к микрофону запрещён. Разрешите его в браузере и в настройках macOS.",
+      NotFoundError: "Микрофон не найден. Подключите устройство ввода.",
+      NotReadableError: "Микрофон занят другим приложением.",
+      OverconstrainedError: "Выбранный вход недоступен. Переключите «Вход» на «Микрофон по умолчанию».",
+    };
+    $("errMsg").textContent = map[e && e.name] || ("Ошибка: " + (e && e.message || e));
+  }
+
+  // ---- auto-hide controls / cursor ----
+  let hideTimer = 0;
+  function armAutoHide() {
+    clearTimeout(hideTimer);
+    document.body.classList.remove("hideUI");
+    hideTimer = setTimeout(() => { if (running) document.body.classList.add("hideUI"); }, 3000);
+  }
+  ["mousemove", "touchstart", "keydown"].forEach(ev =>
+    window.addEventListener(ev, () => { if (running) armAutoHide(); }, { passive: true }));
+
+  // ---- controls ----
+  $("startBtn").onclick = () => start(deviceSel.value || null);
+  $("errRetry").onclick = () => start(deviceSel.value || null);
+
+  deviceSel.onchange = () => { if (running) start(deviceSel.value || null); };
+
+  $("weightSeg").querySelectorAll("button").forEach(b => b.onclick = () => {
+    $("weightSeg").querySelectorAll("button").forEach(x => x.classList.remove("active"));
+    b.classList.add("active");
+    tau = parseFloat(b.dataset.tau);
+    weightLbl.textContent = tau < 0.5 ? "БЫСТРО" : "МЕДЛЕННО";
+  });
+
+  calRange.oninput = () => {
+    calOffset = parseInt(calRange.value, 10);
+    calVal.textContent = "+" + calOffset;
+  };
+
+  $("resetBtn").onclick = resetPeaks;
+
+  function toggleFullscreen() {
+    const el = document.documentElement;
+    if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+      (el.requestFullscreen || el.webkitRequestFullscreen).call(el);
+    } else {
+      (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+    }
+  }
+  $("fsBtn").onclick = toggleFullscreen;
+
+  // keyboard
+  window.addEventListener("keydown", e => {
+    if (e.target.tagName === "INPUT" || e.target.tagName === "SELECT") return;
+    const k = e.key.toLowerCase();
+    if (k === "f") toggleFullscreen();
+    else if (k === "r") resetPeaks();
+    else if (k === " ") { e.preventDefault(); paused = !paused; lastTs = performance.now(); }
+  });
+
+  // try to surface device labels even before start (some browsers expose after first grant)
+  if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
+    navigator.mediaDevices.addEventListener?.("devicechange", listDevices);
+  }
+})();
+</script>
+</body>
+</html>
