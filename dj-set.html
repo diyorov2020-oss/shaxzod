@@ -2,84 +2,54 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>SET LIBRARY · по темпу и жанру</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#0b0b0e;
-    --bg2:#121217;
-    --card:#16161d;
-    --line:#26262f;
-    --txt:#ece9e1;
-    --mut:#8b887f;
-    --gold:#e3c167;
-    --gold-dim:#9a8542;
-    /* energy band colors */
-    --b-slow:#5b8fb0;
-    --b-mid:#4aa893;
-    --b-dance:#e3c167;
-    --b-punk:#e08454;
-    --b-peak:#e0506e;
-    --b-phonk:#9a7ad0;
+    --bg:#0b0b0e; --bg2:#121217; --card:#16161d; --line:#26262f;
+    --txt:#ece9e1; --mut:#8b887f; --gold:#e3c167; --gold-dim:#9a8542;
+    --b-slow:#5b8fb0; --b-mid:#4aa893; --b-dance:#e3c167;
+    --b-punk:#e08454; --b-peak:#e0506e; --b-phonk:#9a7ad0;
   }
-  *{box-sizing:border-box;margin:0;padding:0}
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
   body{
-    background:var(--bg);
-    color:var(--txt);
-    font-family:'Inter',system-ui,sans-serif;
-    -webkit-font-smoothing:antialiased;
-    line-height:1.5;
-    padding-bottom:80px;
+    background:var(--bg); color:var(--txt);
+    font-family:'Inter',system-ui,-apple-system,sans-serif;
+    -webkit-font-smoothing:antialiased; line-height:1.5;
+    padding-bottom:60px;
+    padding-left:env(safe-area-inset-left); padding-right:env(safe-area-inset-right);
   }
   .wrap{max-width:860px;margin:0 auto;padding:0 18px}
 
-  /* HEADER */
-  header{padding:46px 0 26px;border-bottom:1px solid var(--line)}
-  .eyebrow{
-    font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.32em;
-    text-transform:uppercase;color:var(--gold-dim);margin-bottom:14px;
-  }
-  h1{
-    font-family:'Bebas Neue',sans-serif;font-weight:400;
-    font-size:clamp(48px,11vw,92px);line-height:.92;letter-spacing:.01em;
-    color:var(--txt);
-  }
+  header{padding:42px 0 24px;border-bottom:1px solid var(--line)}
+  .eyebrow{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:var(--gold-dim);margin-bottom:12px}
+  h1{font-family:'Bebas Neue',sans-serif;font-weight:400;font-size:clamp(46px,13vw,92px);line-height:.92;letter-spacing:.01em}
   h1 .g{color:var(--gold)}
   .sub{color:var(--mut);font-size:14px;margin-top:14px;max-width:560px}
 
-  /* TEMPO RULER */
-  .ruler{margin:30px 0 6px}
+  .ruler{margin:28px 0 4px}
   .ruler-label{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.2em;color:var(--mut);text-transform:uppercase;margin-bottom:8px}
-  .ruler-track{position:relative;height:6px;border-radius:3px;
-    background:linear-gradient(90deg,var(--b-slow),var(--b-mid),var(--b-dance),var(--b-punk),var(--b-peak));}
+  .ruler-track{height:6px;border-radius:3px;background:linear-gradient(90deg,var(--b-slow),var(--b-mid),var(--b-dance),var(--b-punk),var(--b-peak))}
   .ruler-ticks{display:flex;justify-content:space-between;margin-top:6px}
   .ruler-ticks span{font-family:'Space Mono',monospace;font-size:10px;color:var(--mut)}
 
-  /* CONTROLS */
-  .controls{display:flex;flex-wrap:wrap;gap:8px;margin:26px 0 8px;align-items:center}
-  .search{
-    flex:1 1 180px;min-width:160px;background:var(--bg2);border:1px solid var(--line);
-    color:var(--txt);padding:10px 13px;border-radius:9px;font-size:13px;font-family:'Inter',sans-serif;
-  }
+  .controls{margin:24px 0 4px}
+  .controls-top{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .search{flex:1 1 200px;min-width:150px;background:var(--bg2);border:1px solid var(--line);color:var(--txt);padding:12px 14px;border-radius:10px;font-size:15px;font-family:'Inter',sans-serif}
   .search::placeholder{color:var(--mut)}
   .search:focus{outline:none;border-color:var(--gold-dim)}
-  .filters{display:flex;flex-wrap:wrap;gap:7px;width:100%}
-  .chip{
-    background:transparent;border:1px solid var(--line);color:var(--mut);
-    padding:7px 12px;border-radius:20px;font-size:12px;font-family:'Space Mono',monospace;
-    letter-spacing:.04em;cursor:pointer;transition:.15s;white-space:nowrap;
-  }
-  .chip:hover{border-color:var(--gold-dim);color:var(--txt)}
+  .count{font-family:'Space Mono',monospace;font-size:11px;color:var(--mut);white-space:nowrap}
+  .filters{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+  .chip{background:transparent;border:1px solid var(--line);color:var(--mut);padding:9px 14px;border-radius:20px;font-size:12.5px;font-family:'Space Mono',monospace;letter-spacing:.03em;cursor:pointer;transition:.15s;white-space:nowrap}
+  .chip:active{transform:scale(.96)}
   .chip.active{background:var(--gold);border-color:var(--gold);color:#1a1709;font-weight:700}
   .sort-btn{border-color:var(--gold-dim);color:var(--gold)}
-  .sort-btn:hover{color:var(--gold)}
-  .count{font-family:'Space Mono',monospace;font-size:11px;color:var(--mut);margin-left:auto}
 
-  /* SECTIONS */
-  section{margin-top:38px}
+  section{margin-top:36px}
+  section.hide{display:none}
   .sec-head{display:flex;align-items:baseline;gap:12px;margin-bottom:4px}
   .sec-dot{width:11px;height:11px;border-radius:50%;flex:none;transform:translateY(1px)}
   .sec-title{font-family:'Bebas Neue',sans-serif;font-size:27px;letter-spacing:.02em}
@@ -87,32 +57,29 @@
   .sec-note{font-size:12.5px;color:var(--mut);margin:4px 0 14px;padding-left:23px}
   .sec-note.warn{color:var(--b-phonk)}
 
-  /* TRACK */
-  .track{
-    display:grid;grid-template-columns:1fr auto;gap:4px 14px;align-items:center;
-    padding:11px 14px;background:var(--card);border:1px solid var(--line);
-    border-radius:11px;margin-bottom:7px;border-left:3px solid var(--bd,var(--line));
-  }
+  .track{display:grid;grid-template-columns:1fr auto;gap:4px 14px;align-items:center;padding:12px 14px;background:var(--card);border:1px solid var(--line);border-radius:11px;margin-bottom:7px;border-left:3px solid var(--bd,var(--line))}
+  .track.hide{display:none}
   .t-main{min-width:0}
-  .t-name{font-size:14.5px;font-weight:600;color:var(--txt)}
-  .t-meta{font-size:12px;color:var(--mut);margin-top:2px}
+  .t-name{font-size:15px;font-weight:600}
+  .t-meta{font-size:12.5px;color:var(--mut);margin-top:2px}
   .t-genre{color:var(--gold-dim)}
   .t-right{display:flex;flex-direction:column;align-items:flex-end;gap:5px;min-width:118px}
-  .bpm{font-family:'Space Mono',monospace;font-size:13px;font-weight:700;color:var(--txt)}
+  .bpm{font-family:'Space Mono',monospace;font-size:13px;font-weight:700}
   .bpm small{color:var(--mut);font-weight:400;font-size:10px}
   .bar{width:108px;height:4px;border-radius:2px;background:var(--bg2);position:relative;overflow:hidden}
   .bar i{position:absolute;top:0;bottom:0;left:0;border-radius:2px}
-  .dup{font-size:10px;color:var(--b-punk);font-family:'Space Mono',monospace}
+  .flag{font-size:10px;color:var(--b-punk);font-family:'Space Mono',monospace;margin-left:4px}
 
-  footer{margin-top:46px;padding-top:20px;border-top:1px solid var(--line);
-    font-size:12px;color:var(--mut);line-height:1.7}
+  footer{margin-top:44px;padding-top:20px;border-top:1px solid var(--line);font-size:12.5px;color:var(--mut);line-height:1.7}
   footer b{color:var(--gold-dim);font-weight:600}
-  .empty{text-align:center;color:var(--mut);padding:50px 0;font-family:'Space Mono',monospace;font-size:13px}
+  .empty{text-align:center;color:var(--mut);padding:46px 0;font-family:'Space Mono',monospace;font-size:13px}
+  .empty.hide{display:none}
 
   @media(max-width:520px){
-    .t-right{min-width:96px}
-    .bar{width:84px}
+    .t-right{min-width:92px}
+    .bar{width:78px}
     .sec-bpm{display:none}
+    h1{font-size:clamp(44px,14vw,72px)}
   }
 </style>
 </head>
@@ -132,13 +99,780 @@
   </header>
 
   <div class="controls">
-    <input id="search" class="search" type="text" placeholder="Поиск по названию или артисту…" />
-    <button id="sortBtn" class="chip sort-btn">↑ медленные → быстрые</button>
-    <span class="count" id="count"></span>
-    <div class="filters" id="filters"></div>
+    <div class="controls-top">
+      <input id="search" class="search" type="text" placeholder="Поиск по названию или артисту…" autocomplete="off" autocapitalize="off" />
+      <span class="count" id="count">70 треков</span>
+    </div>
+    <div class="filters" id="filters">
+      <button class="chip active" data-filter="all">Все</button><button class="chip" data-filter="slow">Баллады / Медляк</button><button class="chip" data-filter="mid">Мид-темп / Вайб</button><button class="chip" data-filter="dance">Танцевальные / Прайм-тайм</button><button class="chip" data-filter="punk">Рус. поп-панк / Эмо</button><button class="chip" data-filter="peak">Пик-энергия</button><button class="chip" data-filter="phonk">Фонк / Тёмный блок</button>
+      <button class="chip sort-btn" id="sortBtn">↑ медленные → быстрые</button>
+    </div>
   </div>
 
-  <div id="list"></div>
+  <div id="list">
+    
+    <section data-band="slow">
+      <div class="sec-head">
+        <span class="sec-dot" style="background:var(--b-slow)"></span>
+        <span class="sec-title">Баллады / Медляк</span>
+        <span class="sec-bpm">≈ 65–95 BPM</span>
+      </div>
+      <div class="sec-note ">Медленные окна, начало и финал вечера.</div>
+      <div class="sec-tracks">
+      <div class="track" data-band="slow" data-bpm="75" data-text="обезоружена полина гагарина" style="--bd:var(--b-slow)">
+        <div class="t-main">
+          <div class="t-name">Обезоружена</div>
+          <div class="t-meta">Полина Гагарина · <span class="t-genre">поп-баллада</span></div>
+        </div>
+        <div class="t-right">
+          <div class="bpm">75 <small>BPM</small></div>
+          <div class="bar"><i style="width:16.3%;background:var(--b-slow)"></i></div>
+        </div>
+      </div>
+      <div class="track" data-band="slow" data-bpm="76" data-text="can't pretend tom odell" style="--bd:var(--b-slow)">
+        <div class="t-main">
+          <div class="t-name">Can't Pretend</div>
+          <div class="t-meta">Tom Odell · <span class="t-genre">фортепиано-баллада</span></div>
+        </div>
+        <div class="t-right">
+          <div class="bpm">76 <small>BPM</small></div>
+          <div class="bar"><i style="width:17.3%;background:var(--b-slow)"></i></div>
+        </div>
+      </div>
+      <div class="track" data-band="slow" data-bpm="77" data-text="careless whisper george michael" style="--bd:var(--b-slow)">
+        <div class="t-main">
+          <div class="t-name">Careless Whisper</div>
+          <div class="t-meta">George Michael · <span class="t-genre">соул-поп</span></div>
+        </div>
+        <div class="t-right">
+          <div class="bpm">77 <small>BPM</small></div>
+          <div class="bar"><i style="width:18.3%;background:var(--b-slow)"></i></div>
+        </div>
+      </div>
+      <div class="track" data-band="slow" data-bpm="85" data-text="баллада мот" style="--bd:var(--b-slow)">
+        <div class="t-main">
+          <div class="t-name">Баллада</div>
+          <div class="t-meta">Мот · <span class="t-genre">рэп-баллада</span></div>
+        </div>
+        <div class="t-right">
+          <div class="bpm">85 <small>BPM</small></div>
+          <div class="bar"><i style="width:26.0%;background:var(--b-slow)"></i></div>
+        </div>
+      </div>
+      <div class="track" data-band="slow" data-bpm="88" data-text="that should be me justin bieber" style="--bd:var(--b-slow)">
+        <div class="t-main">
+          <div class="t-name">That Should Be Me</div>
+          <div class="t-meta">Justin Bieber · <span class="t-genre">поп-баллада</span></div>
+        </div>
+        <div class="t-right">
+          <div class="bpm">88 <small>BPM</small></div>
+          <div class="bar"><i style="width:28.8%;background:var(--b-slow)"></i></div>
+        </div>
+      </div>
+      <div class="track" data-band="slow" data-bpm="90" data-text="7 seconds youssou n'dour" style="--bd:var(--b-slow)">
+        <div class="t-main">
+          <div class="t-name">7 Seconds</div>
+          <div class="t-meta">Youssou N'Dour · <span class="t-genre">world / соул</span></div>
+        </div>
+        <div class="t-right">
+          <div class="bpm">90 <small>BPM</small></div>
+          <div class="bar"><i style="width:30.8%;background:var(--b-slow)"></i></div>
+        </div>
+      </div>
+      <div class="track" data-band="slow" data-bpm="90" data-text="самая самая егор крид" style="--bd:var(--b-slow)">
+        <div class="t-main">
+          <div class="t-name">Самая самая</div>
+          <div class="t-meta">Егор Крид · <span class="t-genre">поп-баллада</span></div>
+        </div>
+        <div class="t-right">
+          <div class="bpm">90 <small>BPM</small></div>
+          <div class="bar"><i style="width:30.8%;background:var(--b-slow)"></i></div>
+        </div>
+      </div>
+      <div class="track" data-band="slow" data-bpm="95" data-text="iris goo goo dolls" style="--bd:var(--b-slow)">
+        <div class="t-main">
+          <div class="t-name">Iris</div>
+          <div class="t-meta">Goo Goo Dolls · <span class="t-genre">рок-баллада</span></div>
+        </div>
+        <div class="t-right">
+          <div class="bpm">95 <small>BPM</small></div>
+          <div class="bar"><i style="width:35.6%;background:var(--b-slow)"></i></div>
+        </div>
+      </div>
+      <div class="track" data-band="slow" data-bpm="111" data-text="young and beautiful lana del rey" style="--bd:var(--b-slow)">
+        <div class="t-main">
+          <div class="t-name">Young and Beautiful</div>
+          <div class="t-meta">Lana Del Rey · <span class="t-genre">поп (half-time)</span></div>
+        </div>
+        <div class="t-right">
+          <div class="bpm">111 <small>BPM</small></div>
+          <div class="bar"><i style="width:51.0%;background:var(--b-slow)"></i></div>
+        </div>
+      </div>
+      <div class="track" data-band="slow" data-bpm="113" data-text="purple rain prince" style="--bd:var(--b-slow)">
+        <div class="t-main">
+          <div class="t-name">Purple Rain</div>
+          <div class="t-meta">Prince · <span class="t-genre">рок-баллада</span></div>
+        </div>
+        <div class="t-right">
+          <div class="bpm">113 <small>BPM</small></div>
+          <div class="bar"><i style="width:52.9%;background:var(--b-slow)"></i></div>
+        </div>
+      </div>
+      </div>
+    </section>
+    <section data-band="mid">
+      <div class="sec-head">
+        <span class="sec-dot" style="background:var(--b-mid)"></span>
+        <span class="sec-title">Мид-темп / Вайб</span>
+        <span class="sec-bpm">≈ 90–115 BPM</span>
+      </div>
+      <div class="sec-note ">Связки между блоками, лёгкий движ, «под разговор».</div>
+      <div class="sec-tracks">
+      <div class="track" data-band="mid" data-bpm="92" data-text="why'd you only call me when you're high arctic monkeys" style="--bd:var(--b-mid)">
+        <div class="t-main">
+          <div class="t-name">Why'd You Only Call Me When You're High</div>
+          <div class="t-meta">Arctic Monkeys · <span class="t-genre">инди-рок</span></div>
+        </div>
+        <div class="t-right">
+          <div class="bpm">92 <small>BPM</small></div>
+          <div class="bar"><i style="width:32.7%;background:var(--b-mid)"></i></div>
+        </div>
+      </div>
+      <div class="track" data-band="mid" data-bpm="95" data-text="closer the chainsmokers" style="--bd:var(--b-mid)">
+        <div class="t-main">
+          <div class="t-name">Closer</div>
+          <div class="t-meta">The Chainsmokers · <span class="t-genre">фьюче-бэйс поп</span></div>
+        </div>
+        <div class="t-right">
+          <div class="bpm">95 <small>BPM</small></div>
+          <div class="bar"><i style="width:35.6%;background:var(--b-mid)"></i></div>
+        </div>
+      </div>
+      <div class="track" data-band="mid" data-bpm="95" data-text="кухни бонд с кнопкой" style="--bd:var(--b-mid)">
+        <div class="t-main">
+          <div class="t-name">Кухни</div>
+          <div class="t-meta">Бонд с кнопкой · <span class="t-genre">бедрум-поп</span></div>
+        </div>
+        <div class="t-right">
+          <div class="bpm">95 <small>BPM</small></div>
+          <div class="bar"><i style="width:35.6%;background:var(--b-mid)"></i></div>
+        </div>
+      </div>
+      <div class="track" data-band="mid" data-bpm="95" data-text="слово пацана макс корж" style="--bd:var(--b-mid)">
+        <div class="t-main">
+          <div class="t-name">Слово пацана</div>
+          <div class="t-meta">Макс Корж · <span class="t-genre">хип-хоп</span></div>
+        </div>
+        <div class="t-right">
+          <div class="bpm">95 <small>BPM</small></div>
+          <div class="bar"><i style="width:35.6%;background:var(--b-mid)"></i></div>
+        </div>
+      </div>
+      <div class="track" data-band="mid" data-bpm="95" data-text="вселенная бесконечна noize mc" style="--bd:var(--b-mid)">
+        <div class="t-main">
+          <div class="t-name">Вселенная бесконечна</div>
+          <div class="t-meta">Noize MC · <span class="t-genre">хип-хоп</span></div>
+        </div>
+        <div class="t-right">
+          <div class="bpm">95 <small>BPM</small></div>
+          <div class="bar"><i style="width:35.6%;background:var(--b-mid)"></i></div>
+        </div>
+      </div>
+      <div class="track" data-band="mid" data-bpm="96" data-text="shape of you ed sheeran" style="--bd:var(--b-mid)">
+        <div class="t-main">
+          <div class="t-name">Shape of You</div>
+          <div class="t-meta">Ed Sheeran · <span class="t-genre">дэнсхолл-поп</span></div>
+        </div>
+        <div class="t-right">
+          <div class="bpm">96 <small>BPM</small></div>
+          <div class="bar"><i style="width:36.5%;background:var(--b-mid)"></i></div>
+        </div>
+      </div>
+      <div class="track" data-band="mid" data-bpm="98" data-text="ты случилась мартин" style="--bd:var(--b-mid)">
+        <div class="t-main">
+          <div class="t-name">Ты случилась</div>
+          <div class="t-meta">Мартин · <span class="t-genre">поп</span></div>
+        </div>
+        <div class="t-right">
+          <div class="bpm">98 <small>BPM</small></div>
+          <div class="bar"><i style="width:38.5%;background:var(--b-mid)"></i></div>
+        </div>
+      </div>
+      <div class="track" data-band="mid" data-bpm="100" data-text="forever young alphaville" style="--bd:var(--b-mid)">
+        <div class="t-main">
+          <div class="t-name">Forever Young</div>
+          <div class="t-meta">Alphaville · <span class="t-genre">синтипоп</span></div>
+        </div>
+        <div class="t-right">
+          <div class="bpm">100 <small>BPM</small></div>
+          <div class="bar"><i style="width:40.4%;background:var(--b-mid)"></i></div>
+        </div>
+      </div>
+      <div class="track" data-band="mid" data-bpm="100" data-text="утро дайте танк (!)" style="--bd:var(--b-mid)">
+        <div class="t-main">
+          <div class="t-name">Утро</div>
+          <div class="t-meta">Дайте танк (!) · <span class="t-genre">пост-панк / инди</span></div>
+        </div>
+        <div class="t-right">
+          <div class="bpm">100 <small>BPM</small></div>
+          <div class="bar"><i style="width:40.4%;background:var(--b-mid)"></i></div>
+        </div>
+      </div>
+      <div class="track" data-band="mid" data-bpm="100" data-text="жить в кайф макс корж" style="--bd:var(--b-mid)">
+        <div class="t-main">
+          <div class="t-name">Жить в кайф</div>
+          <div class="t-meta">Макс Корж · <span class="t-genre">хип-хоп / поп</span></div>
+        </div>
+        <div class="t-right">
+          <div class="bpm">100 <small>BPM</small></div>
+          <div class="bar"><i style="width:40.4%;background:var(--b-mid)"></i></div>
+        </div>
+      </div>
+      <div class="track" data-band="mid" data-bpm="100" data-text="raindance dave, tems" style="--bd:var(--b-mid)">
+        <div class="t-main">
+          <div class="t-name">Raindance</div>
+          <div class="t-meta">Dave, Tems · <span class="t-genre">хип-хоп / R&amp;B</span></div>
+        </div>
+        <div class="t-right">
+          <div class="bpm">100 <small>BPM</small></div>
+          <div class="bar"><i style="width:40.4%;background:var(--b-mid)"></i></div>
+        </div>
+      </div>
+      <div class="track" data-band="mid" data-bpm="100" data-text="настоящая ваня дмитриенко" style="--bd:var(--b-mid)">
+        <div class="t-main">
+          <div class="t-name">Настоящая</div>
+          <div class="t-meta">Ваня Дмитриенко · <span class="t-genre">поп</span></div>
+        </div>
+        <div class="t-right">
+          <div class="bpm">100 <small>BPM</small></div>
+          <div class="bar"><i style="width:40.4%;background:var(--b-mid)"></i></div>
+        </div>
+      </div>
+      <div class="track" data-band="mid" data-bpm="100" data-text="куда уходит детство виа сливки" style="--bd:var(--b-mid)">
+        <div class="t-main">
+          <div class="t-name">Куда уходит детство</div>
+          <div class="t-meta">ВИА Сливки · <span class="t-genre">поп</span></div>
+        </div>
+        <div class="t-right">
+          <div class="bpm">100 <small>BPM</small></div>
+          <div class="bar"><i style="width:40.4%;background:var(--b-mid)"></i></div>
+        </div>
+      </div>
+      <div class="track" data-band="mid" data-bpm="105" data-text="babydoll dominic fike" style="--bd:var(--b-mid)">
+        <div class="t-main">
+          <div class="t-name">Babydoll</div>
+          <div class="t-meta">Dominic Fike · <span class="t-genre">инди-поп</span></div>
+        </div>
+        <div class="t-right">
+          <div class="bpm">105 <small>BPM</small></div>
+          <div class="bar"><i style="width:45.2%;background:var(--b-mid)"></i></div>
+        </div>
+      </div>
+      <div class="track" data-band="mid" data-bpm="110" data-text="end of beginning djo" style="--bd:var(--b-mid)">
+        <div class="t-main">
+          <div class="t-name">End of Beginning</div>
+          <div class="t-meta">Djo · <span class="t-genre">инди</span></div>
+        </div>
+        <div class="t-right">
+          <div class="bpm">110 <small>BPM</small></div>
+          <div class="bar"><i style="width:50.0%;background:var(--b-mid)"></i></div>
+        </div>
+      </div>
+      <div class="track" data-band="mid" data-bpm="110" data-text="tongue tied grouplove" style="--bd:var(--b-mid)">
+        <div class="t-main">
+          <div class="t-name">Tongue Tied</div>
+          <div class="t-meta">Grouplove · <span class="t-genre">инди-поп</span></div>
+        </div>
+        <div class="t-right">
+          <div class="bpm">110 <small>BPM</small></div>
+          <div class="bar"><i style="width:50.0%;background:var(--b-mid)"></i></div>
+        </div>
+      </div>
+      <div class="track" data-band="mid" data-bpm="110" data-text="стыцамен иван дорн" style="--bd:var(--b-mid)">
+        <div class="t-main">
+          <div class="t-name">Стыцамен</div>
+          <div class="t-meta">Иван Дорн · <span class="t-genre">фанк-поп</span></div>
+        </div>
+        <div class="t-right">
+          <div class="bpm">110 <small>BPM</small></div>
+          <div class="bar"><i style="width:50.0%;background:var(--b-mid)"></i></div>
+        </div>
+      </div>
+      <div class="track" data-band="mid" data-bpm="112" data-text="tous les mêmes stromae" style="--bd:var(--b-mid)">
+        <div class="t-main">
+          <div class="t-name">Tous les mêmes</div>
+          <div class="t-meta">Stromae · <span class="t-genre">электропоп / нью-бит</span></div>
+        </div>
+        <div class="t-right">
+          <div class="bpm">112 <small>BPM</small></div>
+          <div class="bar"><i style="width:51.9%;background:var(--b-mid)"></i></div>
+        </div>
+      </div>
+      <div class="track" data-band="mid" data-bpm="118" data-text="stand by me ben e. king" style="--bd:var(--b-mid)">
+        <div class="t-main">
+          <div class="t-name">Stand By Me</div>
+          <div class="t-meta">Ben E. King · <span class="t-genre">соул-классика</span></div>
+        </div>
+        <div class="t-right">
+          <div class="bpm">118 <small>BPM</small></div>
+          <div class="bar"><i style="width:57.7%;background:var(--b-mid)"></i></div>
+        </div>
+      </div>
+      </div>
+    </section>
+    <section data-band="dance">
+      <div class="sec-head">
+        <span class="sec-dot" style="background:var(--b-dance)"></span>
+        <span class="sec-title">Танцевальные / Прайм-тайм</span>
+        <span class="sec-bpm">≈ 115–130 BPM</span>
+      </div>
+      <div class="sec-note ">Ядро танцпола.</div>
+      <div class="sec-tracks">
+      <div class="track" data-band="dance" data-bpm="117" data-text="every breath you take the police" style="--bd:var(--b-dance)">
+        <div class="t-main">
+          <div class="t-name">Every Breath You Take</div>
+          <div class="t-meta">The Police · <span class="t-genre">поп-рок</span></div>
+        </div>
+        <div class="t-right">
+          <div class="bpm">117 <small>BPM</small></div>
+          <div class="bar"><i style="width:56.7%;background:var(--b-dance)"></i></div>
+        </div>
+      </div>
+      <div class="track" data-band="dance" data-bpm="118" data-text="jealous егор крид" style="--bd:var(--b-dance)">
+        <div class="t-main">
+          <div class="t-name">Jealous</div>
+          <div class="t-meta">Егор Крид · <span class="t-genre">поп</span></div>
+        </div>
+        <div class="t-right">
+          <div class="bpm">118 <small>BPM</small></div>
+          <div class="bar"><i style="width:57.7%;background:var(--b-dance)"></i></div>
+        </div>
+      </div>
+      <div class="track" data-band="dance" data-bpm="120" data-text="90 pompeya" style="--bd:var(--b-dance)">
+        <div class="t-main">
+          <div class="t-name">90</div>
+          <div class="t-meta">Pompeya · <span class="t-genre">инди-дэнс</span></div>
+        </div>
+        <div class="t-right">
+          <div class="bpm">120 <small>BPM</small></div>
+          <div class="bar"><i style="width:59.6%;background:var(--b-dance)"></i></div>
+        </div>
+      </div>
+      <div class="track" data-band="dance" data-bpm="120" data-text="мне нравится егор крид" style="--bd:var(--b-dance)">
+        <div class="t-main">
+          <div class="t-name">Мне нравится</div>
+          <div class="t-meta">Егор Крид · <span class="t-genre">поп</span></div>
+        </div>
+        <div class="t-right">
+          <div class="bpm">120 <small>BPM</small></div>
+          <div class="bar"><i style="width:59.6%;background:var(--b-dance)"></i></div>
+        </div>
+      </div>
+      <div class="track" data-band="dance" data-bpm="120" data-text="будильник егор крид" style="--bd:var(--b-dance)">
+        <div class="t-main">
+          <div class="t-name">Будильник</div>
+          <div class="t-meta">Егор Крид · <span class="t-genre">поп</span></div>
+        </div>
+        <div class="t-right">
+          <div class="bpm">120 <small>BPM</small></div>
+          <div class="bar"><i style="width:59.6%;background:var(--b-dance)"></i></div>
+        </div>
+      </div>
+      <div class="track" data-band="dance" data-bpm="120" data-text="выпускной егор крид" style="--bd:var(--b-dance)">
+        <div class="t-main">
+          <div class="t-name">Выпускной</div>
+          <div class="t-meta">Егор Крид · <span class="t-genre">поп</span></div>
+        </div>
+        <div class="t-right">
+          <div class="bpm">120 <small>BPM</small></div>
+          <div class="bar"><i style="width:59.6%;background:var(--b-dance)"></i></div>
+        </div>
+      </div>
+      <div class="track" data-band="dance" data-bpm="120" data-text="шарады мот и егор крид" style="--bd:var(--b-dance)">
+        <div class="t-main">
+          <div class="t-name">Шарады</div>
+          <div class="t-meta">Мот и Егор Крид · <span class="t-genre">поп</span></div>
+        </div>
+        <div class="t-right">
+          <div class="bpm">120 <small>BPM</small></div>
+          <div class="bar"><i style="width:59.6%;background:var(--b-dance)"></i></div>
+        </div>
+      </div>
+      <div class="track" data-band="dance" data-bpm="120" data-text="она не твоя мот" style="--bd:var(--b-dance)">
+        <div class="t-main">
+          <div class="t-name">Она не твоя</div>
+          <div class="t-meta">Мот · <span class="t-genre">поп</span></div>
+        </div>
+        <div class="t-right">
+          <div class="bpm">120 <small>BPM</small></div>
+          <div class="bar"><i style="width:59.6%;background:var(--b-dance)"></i></div>
+        </div>
+      </div>
+      <div class="track" data-band="dance" data-bpm="120" data-text="ночной круиз k.krash" style="--bd:var(--b-dance)">
+        <div class="t-main">
+          <div class="t-name">Ночной круиз</div>
+          <div class="t-meta">K.KRASH · <span class="t-genre">хип-хоп / дэнс</span></div>
+        </div>
+        <div class="t-right">
+          <div class="bpm">120 <small>BPM</small></div>
+          <div class="bar"><i style="width:59.6%;background:var(--b-dance)"></i></div>
+        </div>
+      </div>
+      <div class="track" data-band="dance" data-bpm="120" data-text="девочка в классе джизус" style="--bd:var(--b-dance)">
+        <div class="t-main">
+          <div class="t-name">Девочка в классе</div>
+          <div class="t-meta">Джизус · <span class="t-genre">рэп</span></div>
+        </div>
+        <div class="t-right">
+          <div class="bpm">120 <small>BPM</small></div>
+          <div class="bar"><i style="width:59.6%;background:var(--b-dance)"></i></div>
+        </div>
+      </div>
+      <div class="track" data-band="dance" data-bpm="120" data-text="выпускной баста" style="--bd:var(--b-dance)">
+        <div class="t-main">
+          <div class="t-name">Выпускной</div>
+          <div class="t-meta">Баста · <span class="t-genre">хип-хоп</span></div>
+        </div>
+        <div class="t-right">
+          <div class="bpm">120 <small>BPM</small></div>
+          <div class="bar"><i style="width:59.6%;background:var(--b-dance)"></i></div>
+        </div>
+      </div>
+      <div class="track" data-band="dance" data-bpm="120" data-text="тут там сергей лазарев" style="--bd:var(--b-dance)">
+        <div class="t-main">
+          <div class="t-name">Тут там <span class="flag">проверь</span></div>
+          <div class="t-meta">Сергей Лазарев · <span class="t-genre">поп</span></div>
+        </div>
+        <div class="t-right">
+          <div class="bpm">120 <small>BPM</small></div>
+          <div class="bar"><i style="width:59.6%;background:var(--b-dance)"></i></div>
+        </div>
+      </div>
+      <div class="track" data-band="dance" data-bpm="120" data-text="тону xolidayboy" style="--bd:var(--b-dance)">
+        <div class="t-main">
+          <div class="t-name">Тону</div>
+          <div class="t-meta">Xolidayboy · <span class="t-genre">дэнс-поп / эмо-поп</span></div>
+        </div>
+        <div class="t-right">
+          <div class="bpm">120 <small>BPM</small></div>
+          <div class="bar"><i style="width:59.6%;background:var(--b-dance)"></i></div>
+        </div>
+      </div>
+      <div class="track" data-band="dance" data-bpm="120" data-text="пожары xolidayboy" style="--bd:var(--b-dance)">
+        <div class="t-main">
+          <div class="t-name">Пожары</div>
+          <div class="t-meta">Xolidayboy · <span class="t-genre">дэнс-поп / эмо-поп</span></div>
+        </div>
+        <div class="t-right">
+          <div class="bpm">120 <small>BPM</small></div>
+          <div class="bar"><i style="width:59.6%;background:var(--b-dance)"></i></div>
+        </div>
+      </div>
+      <div class="track" data-band="dance" data-bpm="122" data-text="танцуй самбу danial" style="--bd:var(--b-dance)">
+        <div class="t-main">
+          <div class="t-name">Танцуй самбу</div>
+          <div class="t-meta">Danial · <span class="t-genre">дэнс</span></div>
+        </div>
+        <div class="t-right">
+          <div class="bpm">122 <small>BPM</small></div>
+          <div class="bar"><i style="width:61.5%;background:var(--b-dance)"></i></div>
+        </div>
+      </div>
+      <div class="track" data-band="dance" data-bpm="122" data-text="фантом akva" style="--bd:var(--b-dance)">
+        <div class="t-main">
+          <div class="t-name">Фантом</div>
+          <div class="t-meta">Akva · <span class="t-genre">поп</span></div>
+        </div>
+        <div class="t-right">
+          <div class="bpm">122 <small>BPM</small></div>
+          <div class="bar"><i style="width:61.5%;background:var(--b-dance)"></i></div>
+        </div>
+      </div>
+      <div class="track" data-band="dance" data-bpm="122" data-text="режиссёр градусы" style="--bd:var(--b-dance)">
+        <div class="t-main">
+          <div class="t-name">Режиссёр</div>
+          <div class="t-meta">Градусы · <span class="t-genre">поп</span></div>
+        </div>
+        <div class="t-right">
+          <div class="bpm">122 <small>BPM</small></div>
+          <div class="bar"><i style="width:61.5%;background:var(--b-dance)"></i></div>
+        </div>
+      </div>
+      <div class="track" data-band="dance" data-bpm="122" data-text="мания xolidayboy" style="--bd:var(--b-dance)">
+        <div class="t-main">
+          <div class="t-name">Мания</div>
+          <div class="t-meta">Xolidayboy · <span class="t-genre">дэнс-поп / эмо-поп</span></div>
+        </div>
+        <div class="t-right">
+          <div class="bpm">122 <small>BPM</small></div>
+          <div class="bar"><i style="width:61.5%;background:var(--b-dance)"></i></div>
+        </div>
+      </div>
+      <div class="track" data-band="dance" data-bpm="124" data-text="минус дистанция daniela" style="--bd:var(--b-dance)">
+        <div class="t-main">
+          <div class="t-name">Минус дистанция</div>
+          <div class="t-meta">Daniela · <span class="t-genre">дэнс</span></div>
+        </div>
+        <div class="t-right">
+          <div class="bpm">124 <small>BPM</small></div>
+          <div class="bar"><i style="width:63.5%;background:var(--b-dance)"></i></div>
+        </div>
+      </div>
+      <div class="track" data-band="dance" data-bpm="124" data-text="alena — ярмарка судеб (ремикс) —" style="--bd:var(--b-dance)">
+        <div class="t-main">
+          <div class="t-name">Alena — Ярмарка судеб (ремикс)</div>
+          <div class="t-meta">— · <span class="t-genre">дэнс</span></div>
+        </div>
+        <div class="t-right">
+          <div class="bpm">124 <small>BPM</small></div>
+          <div class="bar"><i style="width:63.5%;background:var(--b-dance)"></i></div>
+        </div>
+      </div>
+      <div class="track" data-band="dance" data-bpm="125" data-text="ты так красива 5sta family" style="--bd:var(--b-dance)">
+        <div class="t-main">
+          <div class="t-name">Ты так красива</div>
+          <div class="t-meta">5sta Family · <span class="t-genre">рус-поп</span></div>
+        </div>
+        <div class="t-right">
+          <div class="bpm">125 <small>BPM</small></div>
+          <div class="bar"><i style="width:64.4%;background:var(--b-dance)"></i></div>
+        </div>
+      </div>
+      <div class="track" data-band="dance" data-bpm="125" data-text="маршрутка iowa" style="--bd:var(--b-dance)">
+        <div class="t-main">
+          <div class="t-name">Маршрутка</div>
+          <div class="t-meta">IOWA · <span class="t-genre">поп</span></div>
+        </div>
+        <div class="t-right">
+          <div class="bpm">125 <small>BPM</small></div>
+          <div class="bar"><i style="width:64.4%;background:var(--b-dance)"></i></div>
+        </div>
+      </div>
+      <div class="track" data-band="dance" data-bpm="126" data-text="i love it icona pop" style="--bd:var(--b-dance)">
+        <div class="t-main">
+          <div class="t-name">I Love It</div>
+          <div class="t-meta">Icona Pop · <span class="t-genre">дэнс-поп</span></div>
+        </div>
+        <div class="t-right">
+          <div class="bpm">126 <small>BPM</small></div>
+          <div class="bar"><i style="width:65.4%;background:var(--b-dance)"></i></div>
+        </div>
+      </div>
+      <div class="track" data-band="dance" data-bpm="126" data-text="last friday night katy perry" style="--bd:var(--b-dance)">
+        <div class="t-main">
+          <div class="t-name">Last Friday Night</div>
+          <div class="t-meta">Katy Perry · <span class="t-genre">поп</span></div>
+        </div>
+        <div class="t-right">
+          <div class="bpm">126 <small>BPM</small></div>
+          <div class="bar"><i style="width:65.4%;background:var(--b-dance)"></i></div>
+        </div>
+      </div>
+      <div class="track" data-band="dance" data-bpm="128" data-text="beauty and a beat justin bieber" style="--bd:var(--b-dance)">
+        <div class="t-main">
+          <div class="t-name">Beauty and a Beat</div>
+          <div class="t-meta">Justin Bieber · <span class="t-genre">EDM-поп</span></div>
+        </div>
+        <div class="t-right">
+          <div class="bpm">128 <small>BPM</small></div>
+          <div class="bar"><i style="width:67.3%;background:var(--b-dance)"></i></div>
+        </div>
+      </div>
+      <div class="track" data-band="dance" data-bpm="128" data-text="многоэтажки 5sta family" style="--bd:var(--b-dance)">
+        <div class="t-main">
+          <div class="t-name">Многоэтажки</div>
+          <div class="t-meta">5sta Family · <span class="t-genre">рус-поп / дэнс</span></div>
+        </div>
+        <div class="t-right">
+          <div class="bpm">128 <small>BPM</small></div>
+          <div class="bar"><i style="width:67.3%;background:var(--b-dance)"></i></div>
+        </div>
+      </div>
+      <div class="track" data-band="dance" data-bpm="130" data-text="танцы ssshhhiiittt!" style="--bd:var(--b-dance)">
+        <div class="t-main">
+          <div class="t-name">Танцы</div>
+          <div class="t-meta">ssshhhiiittt! · <span class="t-genre">хайперпоп / дэнс</span></div>
+        </div>
+        <div class="t-right">
+          <div class="bpm">130 <small>BPM</small></div>
+          <div class="bar"><i style="width:69.2%;background:var(--b-dance)"></i></div>
+        </div>
+      </div>
+      <div class="track" data-band="dance" data-bpm="130" data-text="кустурица —" style="--bd:var(--b-dance)">
+        <div class="t-main">
+          <div class="t-name">Кустурица</div>
+          <div class="t-meta">— · <span class="t-genre">балкан-дэнс</span></div>
+        </div>
+        <div class="t-right">
+          <div class="bpm">130 <small>BPM</small></div>
+          <div class="bar"><i style="width:69.2%;background:var(--b-dance)"></i></div>
+        </div>
+      </div>
+      <div class="track" data-band="dance" data-bpm="130" data-text="baby justin bieber" style="--bd:var(--b-dance)">
+        <div class="t-main">
+          <div class="t-name">Baby</div>
+          <div class="t-meta">Justin Bieber · <span class="t-genre">поп</span></div>
+        </div>
+        <div class="t-right">
+          <div class="bpm">130 <small>BPM</small></div>
+          <div class="bar"><i style="width:69.2%;background:var(--b-dance)"></i></div>
+        </div>
+      </div>
+      <div class="track" data-band="dance" data-bpm="134" data-text="the one that got away katy perry" style="--bd:var(--b-dance)">
+        <div class="t-main">
+          <div class="t-name">The One That Got Away</div>
+          <div class="t-meta">Katy Perry · <span class="t-genre">поп</span></div>
+        </div>
+        <div class="t-right">
+          <div class="bpm">134 <small>BPM</small></div>
+          <div class="bar"><i style="width:73.1%;background:var(--b-dance)"></i></div>
+        </div>
+      </div>
+      </div>
+    </section>
+    <section data-band="punk">
+      <div class="sec-head">
+        <span class="sec-dot" style="background:var(--b-punk)"></span>
+        <span class="sec-title">Рус. поп-панк / Эмо</span>
+        <span class="sec-bpm">высокая энергия BPM</span>
+      </div>
+      <div class="sec-note ">Высокая энергия, орут хором — держать вместе одним блоком.</div>
+      <div class="sec-tracks">
+      <div class="track" data-band="punk" data-bpm="130" data-text="горы по колено макс корж" style="--bd:var(--b-punk)">
+        <div class="t-main">
+          <div class="t-name">Горы по колено</div>
+          <div class="t-meta">Макс Корж · <span class="t-genre">хип-хоп / панк-энергия</span></div>
+        </div>
+        <div class="t-right">
+          <div class="bpm">130 <small>BPM</small></div>
+          <div class="bar"><i style="width:69.2%;background:var(--b-punk)"></i></div>
+        </div>
+      </div>
+      <div class="track" data-band="punk" data-bpm="140" data-text="глупая нервы" style="--bd:var(--b-punk)">
+        <div class="t-main">
+          <div class="t-name">Глупая</div>
+          <div class="t-meta">Нервы · <span class="t-genre">поп-панк</span></div>
+        </div>
+        <div class="t-right">
+          <div class="bpm">140 <small>BPM</small></div>
+          <div class="bar"><i style="width:78.8%;background:var(--b-punk)"></i></div>
+        </div>
+      </div>
+      <div class="track" data-band="punk" data-bpm="140" data-text="нервы нервы" style="--bd:var(--b-punk)">
+        <div class="t-main">
+          <div class="t-name">Нервы</div>
+          <div class="t-meta">Нервы · <span class="t-genre">поп-панк</span></div>
+        </div>
+        <div class="t-right">
+          <div class="bpm">140 <small>BPM</small></div>
+          <div class="bar"><i style="width:78.8%;background:var(--b-punk)"></i></div>
+        </div>
+      </div>
+      <div class="track" data-band="punk" data-bpm="145" data-text="слишком влюблён нервы" style="--bd:var(--b-punk)">
+        <div class="t-main">
+          <div class="t-name">Слишком влюблён</div>
+          <div class="t-meta">Нервы · <span class="t-genre">поп-панк</span></div>
+        </div>
+        <div class="t-right">
+          <div class="bpm">145 <small>BPM</small></div>
+          <div class="bar"><i style="width:83.7%;background:var(--b-punk)"></i></div>
+        </div>
+      </div>
+      <div class="track" data-band="punk" data-bpm="150" data-text="лаэла нервы" style="--bd:var(--b-punk)">
+        <div class="t-main">
+          <div class="t-name">Лаэла</div>
+          <div class="t-meta">Нервы · <span class="t-genre">поп-панк</span></div>
+        </div>
+        <div class="t-right">
+          <div class="bpm">150 <small>BPM</small></div>
+          <div class="bar"><i style="width:88.5%;background:var(--b-punk)"></i></div>
+        </div>
+      </div>
+      </div>
+    </section>
+    <section data-band="peak">
+      <div class="sec-head">
+        <span class="sec-dot" style="background:var(--b-peak)"></span>
+        <span class="sec-title">Пик-энергия</span>
+        <span class="sec-bpm">128+ BPM</span>
+      </div>
+      <div class="sec-note ">Точка максимума.</div>
+      <div class="sec-tracks">
+      <div class="track" data-band="peak" data-bpm="132" data-text="gangnam style psy" style="--bd:var(--b-peak)">
+        <div class="t-main">
+          <div class="t-name">Gangnam Style</div>
+          <div class="t-meta">PSY · <span class="t-genre">K-pop / дэнс</span></div>
+        </div>
+        <div class="t-right">
+          <div class="bpm">132 <small>BPM</small></div>
+          <div class="bar"><i style="width:71.2%;background:var(--b-peak)"></i></div>
+        </div>
+      </div>
+      </div>
+    </section>
+    <section data-band="phonk">
+      <div class="sec-head">
+        <span class="sec-dot" style="background:var(--b-phonk)"></span>
+        <span class="sec-title">Фонк / Тёмный блок</span>
+        <span class="sec-bpm">≈ 140–160 BPM</span>
+      </div>
+      <div class="sec-note warn">Другая энергия и тяжёлая тематика — осознанно и коротко, в резерве.</div>
+      <div class="sec-tracks">
+      <div class="track" data-band="phonk" data-bpm="145" data-text="overdose чувств тёмный принц" style="--bd:var(--b-phonk)">
+        <div class="t-main">
+          <div class="t-name">Overdose Чувств</div>
+          <div class="t-meta">тёмный принц · <span class="t-genre">фонк</span></div>
+        </div>
+        <div class="t-right">
+          <div class="bpm">145 <small>BPM</small></div>
+          <div class="bar"><i style="width:83.7%;background:var(--b-phonk)"></i></div>
+        </div>
+      </div>
+      <div class="track" data-band="phonk" data-bpm="150" data-text="armor club 2 fortuna 812" style="--bd:var(--b-phonk)">
+        <div class="t-main">
+          <div class="t-name">Armor Club 2</div>
+          <div class="t-meta">FORTUNA 812 · <span class="t-genre">фонк</span></div>
+        </div>
+        <div class="t-right">
+          <div class="bpm">150 <small>BPM</small></div>
+          <div class="bar"><i style="width:88.5%;background:var(--b-phonk)"></i></div>
+        </div>
+      </div>
+      <div class="track" data-band="phonk" data-bpm="150" data-text="princeofscale fortuna 812" style="--bd:var(--b-phonk)">
+        <div class="t-main">
+          <div class="t-name">princeofscale</div>
+          <div class="t-meta">FORTUNA 812 · <span class="t-genre">фонк</span></div>
+        </div>
+        <div class="t-right">
+          <div class="bpm">150 <small>BPM</small></div>
+          <div class="bar"><i style="width:88.5%;background:var(--b-phonk)"></i></div>
+        </div>
+      </div>
+      <div class="track" data-band="phonk" data-bpm="150" data-text="папа тёмный принц" style="--bd:var(--b-phonk)">
+        <div class="t-main">
+          <div class="t-name">Папа</div>
+          <div class="t-meta">тёмный принц · <span class="t-genre">фонк</span></div>
+        </div>
+        <div class="t-right">
+          <div class="bpm">150 <small>BPM</small></div>
+          <div class="bar"><i style="width:88.5%;background:var(--b-phonk)"></i></div>
+        </div>
+      </div>
+      <div class="track" data-band="phonk" data-bpm="155" data-text="порезы на руках fortuna 812" style="--bd:var(--b-phonk)">
+        <div class="t-main">
+          <div class="t-name">Порезы на руках</div>
+          <div class="t-meta">FORTUNA 812 · <span class="t-genre">фонк</span></div>
+        </div>
+        <div class="t-right">
+          <div class="bpm">155 <small>BPM</small></div>
+          <div class="bar"><i style="width:93.3%;background:var(--b-phonk)"></i></div>
+        </div>
+      </div>
+      </div>
+    </section>
+    <div class="empty hide" id="empty">Ничего не найдено</div>
+  </div>
 
   <footer>
     <b>Заметки.</b> «Every Breath You Take» в списке дублировался — оставлен один раз. «Тут там» (Лазарев) — проверь точное название/версию. Фонк-блок и поп-панк по энергии конфликтуют с поп-ядром: фонк держи в резерве, поп-панк ставь одним «выбросом» на пике. Тёмный фонк-блок («тёмная» тематика) — для молодёжной/семейной аудитории включай осознанно и коротко, только если зал сам туда тянет.
@@ -147,162 +881,70 @@
 </div>
 
 <script>
-const BANDS = {
-  slow:  {name:'Баллады / Медляк',      bpm:'≈ 65–95',   color:'var(--b-slow)',  note:'Медленные окна, начало и финал вечера.'},
-  mid:   {name:'Мид-темп / Вайб',        bpm:'≈ 90–115',  color:'var(--b-mid)',   note:'Связки между блоками, лёгкий движ, «под разговор».'},
-  dance: {name:'Танцевальные / Прайм-тайм', bpm:'≈ 115–130', color:'var(--b-dance)', note:'Ядро танцпола.'},
-  punk:  {name:'Рус. поп-панк / Эмо',    bpm:'высокая энергия', color:'var(--b-punk)', note:'Орут хором — держать вместе, один мощный блок.'},
-  peak:  {name:'Пик-энергия',            bpm:'128+',      color:'var(--b-peak)',  note:'Точка максимума.'},
-  phonk: {name:'Фонк / Тёмный блок',     bpm:'≈ 140–160', color:'var(--b-phonk)', note:'Другая энергия и тяжёлая тематика — осознанно и коротко, в резерве.', warn:true},
-};
+(function(){
+  var active='all', q='', sortDir='asc';
+  var listEl=document.getElementById('list');
+  var emptyEl=document.getElementById('empty');
+  var countEl=document.getElementById('count');
+  var sections=[].slice.call(document.querySelectorAll('section'));
 
-// bpm приблизительный; флаг q = под вопросом
-const T = [
-  // SLOW
-  ['Careless Whisper','George Michael','соул-поп',77,'slow'],
-  ['Purple Rain','Prince','рок-баллада',113,'slow'],
-  ['Iris','Goo Goo Dolls','рок-баллада',95,'slow'],
-  ['7 Seconds','Youssou N\'Dour','world / соул',90,'slow'],
-  ['Can\'t Pretend','Tom Odell','фортепиано-баллада',76,'slow'],
-  ['That Should Be Me','Justin Bieber','поп-баллада',88,'slow'],
-  ['Young and Beautiful','Lana Del Rey','поп (half-time)',111,'slow'],
-  ['Обезоружена','Полина Гагарина','поп-баллада',75,'slow'],
-  ['Баллада','Мот','рэп-баллада',85,'slow'],
-  ['Самая самая','Егор Крид','поп-баллада',90,'slow'],
-  // MID
-  ['Shape of You','Ed Sheeran','дэнсхолл-поп',96,'mid'],
-  ['Closer','The Chainsmokers','фьюче-бэйс поп',95,'mid'],
-  ['Why\'d You Only Call Me When You\'re High','Arctic Monkeys','инди-рок',92,'mid'],
-  ['Stand By Me','Ben E. King','соул-классика',118,'mid'],
-  ['Forever Young','Alphaville','синтипоп',100,'mid'],
-  ['End of Beginning','Djo','инди',110,'mid'],
-  ['Babydoll','Dominic Fike','инди-поп',105,'mid'],
-  ['Tongue Tied','Grouplove','инди-поп',110,'mid'],
-  ['Утро','Дайте танк (!)','пост-панк / инди',100,'mid'],
-  ['Кухни','Бонд с кнопкой','бедрум-поп',95,'mid'],
-  ['Стыцамен','Иван Дорн','фанк-поп',110,'mid'],
-  ['Жить в кайф','Макс Корж','хип-хоп / поп',100,'mid'],
-  ['Слово пацана','Макс Корж','хип-хоп',95,'mid'],
-  ['Raindance','Dave, Tems','хип-хоп / R&B',100,'mid'],
-  ['Вселенная бесконечна','Noize MC','хип-хоп',95,'mid'],
-  ['Настоящая','Ваня Дмитриенко','поп',100,'mid'],
-  ['Куда уходит детство','ВИА Сливки','поп',100,'mid'],
-  ['Ты случилась','Мартин','поп',98,'mid'],
-  // DANCE
-  ['90','Pompeya','инди-дэнс',120,'dance'],
-  ['Every Breath You Take','The Police','поп-рок',117,'dance'],
-  ['I Love It','Icona Pop','дэнс-поп',126,'dance'],
-  ['Last Friday Night','Katy Perry','поп',126,'dance'],
-  ['Beauty and a Beat','Justin Bieber','EDM-поп',128,'dance'],
-  ['The One That Got Away','Katy Perry','поп',134,'dance'],
-  ['Многоэтажки','5sta Family','рус-поп / дэнс',128,'dance'],
-  ['Ты так красива','5sta Family','рус-поп',125,'dance'],
-  ['Маршрутка','IOWA','поп',125,'dance'],
-  ['Танцы','ssshhhiiittt!','хайперпоп / дэнс',130,'dance'],
-  ['Кустурица','—','балкан-дэнс',130,'dance'],
-  ['Мне нравится','Егор Крид','поп',120,'dance'],
-  ['Будильник','Егор Крид','поп',120,'dance'],
-  ['Jealous','Егор Крид','поп',118,'dance'],
-  ['Выпускной','Егор Крид','поп',120,'dance'],
-  ['Шарады','Мот и Егор Крид','поп',120,'dance'],
-  ['Она не твоя','Мот','поп',120,'dance'],
-  ['Танцуй самбу','Danial','дэнс',122,'dance'],
-  ['Минус дистанция','Daniela','дэнс',124,'dance'],
-  ['Фантом','Akva','поп',122,'dance'],
-  ['Ночной круиз','K.KRASH','хип-хоп / дэнс',120,'dance'],
-  ['Режиссёр','Градусы','поп',122,'dance'],
-  ['Девочка в классе','Джизус','рэп',120,'dance'],
-  ['Выпускной','Баста','хип-хоп',120,'dance'],
-  ['Baby','Justin Bieber','поп',130,'dance'],
-  ['Alena — Ярмарка судеб (ремикс)','—','дэнс',124,'dance'],
-  ['Тут там','Сергей Лазарев','поп',120,'dance',true],
-  // PUNK
-  ['Лаэла','Нервы','поп-панк',150,'punk'],
-  ['Глупая','Нервы','поп-панк',140,'punk'],
-  ['Слишком влюблён','Нервы','поп-панк',145,'punk'],
-  ['Нервы','Нервы','поп-панк',140,'punk'],
-  ['Горы по колено','Макс Корж','хип-хоп / панк-энергия',130,'punk'],
-  // PEAK
-  ['Gangnam Style','PSY','K-pop / дэнс',132,'peak'],
-  // PHONK
-  ['Armor Club 2','FORTUNA 812','фонк',150,'phonk'],
-  ['Порезы на руках','FORTUNA 812','фонк',155,'phonk'],
-  ['princeofscale','FORTUNA 812','фонк',150,'phonk'],
-  ['Overdose Чувств','тёмный принц','фонк',145,'phonk'],
-  ['Папа','тёмный принц','фонк',150,'phonk'],
-];
-
-const MIN=58, MAX=162;
-const pct = b => Math.max(0,Math.min(100,((b-MIN)/(MAX-MIN))*100));
-const ORDER = ['slow','mid','dance','punk','peak','phonk'];
-
-let active='all', q='', sortDir='asc';
-
-function render(){
-  const list=document.getElementById('list');
-  list.innerHTML='';
-  let shown=0;
-  const ql=q.trim().toLowerCase();
-
-  ORDER.forEach(bk=>{
-    if(active!=='all' && active!==bk) return;
-    const band=BANDS[bk];
-    let rows=T.filter(t=>t[4]===bk);
-    if(ql) rows=rows.filter(t=>(t[0]+' '+t[1]).toLowerCase().includes(ql));
-    if(!rows.length) return;
-    rows.sort((a,b)=> sortDir==='asc' ? a[3]-b[3] : b[3]-a[3]);
-    shown+=rows.length;
-
-    const sec=document.createElement('section');
-    sec.innerHTML=`
-      <div class="sec-head">
-        <span class="sec-dot" style="background:${band.color}"></span>
-        <span class="sec-title">${band.name}</span>
-        <span class="sec-bpm">${band.bpm} BPM</span>
-      </div>
-      <div class="sec-note ${band.warn?'warn':''}">${band.note}</div>`;
-    rows.forEach(t=>{
-      const [name,art,genre,bpm,,qflag]=t;
-      const d=document.createElement('div');
-      d.className='track';
-      d.style.setProperty('--bd',band.color);
-      d.innerHTML=`
-        <div class="t-main">
-          <div class="t-name">${name}${qflag?' <span class="dup">проверь</span>':''}</div>
-          <div class="t-meta">${art} · <span class="t-genre">${genre}</span></div>
-        </div>
-        <div class="t-right">
-          <div class="bpm">${bpm} <small>BPM</small></div>
-          <div class="bar"><i style="width:${pct(bpm)}%;background:${band.color}"></i></div>
-        </div>`;
-      sec.appendChild(d);
+  function apply(){
+    var shown=0; var ql=q.trim().toLowerCase();
+    sections.forEach(function(sec){
+      var bandOK = (active==='all' || sec.getAttribute('data-band')===active);
+      var tracks=[].slice.call(sec.querySelectorAll('.track'));
+      var visibleInSec=0;
+      tracks.forEach(function(tr){
+        var match = bandOK && (!ql || tr.getAttribute('data-text').indexOf(ql)>-1);
+        tr.classList.toggle('hide', !match);
+        if(match){visibleInSec++; shown++;}
+      });
+      sec.classList.toggle('hide', visibleInSec===0);
     });
-    list.appendChild(sec);
+    emptyEl.classList.toggle('hide', shown>0);
+    countEl.textContent = shown + ' ' + plural(shown);
+  }
+
+  function plural(n){
+    var n10=n%10, n100=n%100;
+    if(n10===1 && n100!==11) return 'трек';
+    if(n10>=2 && n10<=4 && (n100<10||n100>=20)) return 'трека';
+    return 'треков';
+  }
+
+  function sortAll(){
+    sections.forEach(function(sec){
+      var box=sec.querySelector('.sec-tracks');
+      var tracks=[].slice.call(box.querySelectorAll('.track'));
+      tracks.sort(function(a,b){
+        var x=+a.getAttribute('data-bpm'), y=+b.getAttribute('data-bpm');
+        return sortDir==='asc' ? x-y : y-x;
+      });
+      tracks.forEach(function(t){box.appendChild(t);});
+    });
+  }
+
+  // search
+  document.getElementById('search').addEventListener('input',function(e){q=e.target.value;apply();});
+
+  // filters
+  [].slice.call(document.querySelectorAll('.chip[data-filter]')).forEach(function(btn){
+    btn.addEventListener('click',function(){
+      active=btn.getAttribute('data-filter');
+      document.querySelectorAll('.chip[data-filter]').forEach(function(c){c.classList.remove('active');});
+      btn.classList.add('active');
+      apply();
+    });
   });
 
-  if(!shown) list.innerHTML='<div class="empty">Ничего не найдено</div>';
-  document.getElementById('count').textContent=shown+' треков';
-}
-
-// build filter chips
-const F=document.getElementById('filters');
-const chips=[['all','Все']].concat(ORDER.map(k=>[k,BANDS[k].name]));
-chips.forEach(([k,label],i)=>{
-  const b=document.createElement('button');
-  b.className='chip'+(i===0?' active':'');
-  b.textContent=label;
-  b.onclick=()=>{active=k;document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));b.classList.add('active');render();};
-  F.appendChild(b);
-});
-document.getElementById('search').addEventListener('input',e=>{q=e.target.value;render();});
-
-const sortBtn=document.getElementById('sortBtn');
-sortBtn.onclick=()=>{
-  sortDir = sortDir==='asc' ? 'desc' : 'asc';
-  sortBtn.textContent = sortDir==='asc' ? '↑ медленные → быстрые' : '↓ быстрые → медленные';
-  render();
-};
-render();
+  // sort toggle
+  var sortBtn=document.getElementById('sortBtn');
+  sortBtn.addEventListener('click',function(){
+    sortDir = sortDir==='asc' ? 'desc' : 'asc';
+    sortBtn.textContent = sortDir==='asc' ? '↑ медленные → быстрые' : '↓ быстрые → медленные';
+    sortAll();
+  });
+})();
 </script>
 </body>
 </html>
