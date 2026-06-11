@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Голосовая птичка 🎤</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Russo+One&display=swap" rel="stylesheet">
+<style>
+:root{
+  --gold:#f5c542; --gold2:#ffd76a; --bg:#070912; --panel:rgba(15,19,38,.93);
+  --text:#eef1ff; --muted:#8b93b8; --danger:#ff5d5d; --ok:#6ee77a;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--text);
+  font-family:'Russo One',-apple-system,'Segoe UI',Roboto,sans-serif}
+canvas#game{position:fixed;inset:0;display:block}
+.overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+  background:rgba(4,6,14,.78);backdrop-filter:blur(8px);z-index:20;padding:16px;overflow:auto}
+.hidden{display:none!important}
+.panel{width:min(580px,94vw);background:var(--panel);border:1px solid rgba(245,197,66,.35);
+  border-radius:20px;padding:26px 30px;box-shadow:0 24px 80px rgba(0,0,0,.65)}
+h1{margin:0 0 4px;font-size:30px;font-weight:400;letter-spacing:.5px;color:var(--gold);text-align:center}
+.sub{text-align:center;color:var(--muted);font-size:13px;margin-bottom:18px;font-family:system-ui}
+.row{display:flex;gap:10px;align-items:center;margin:11px 0}
+button{cursor:pointer;border:0;border-radius:12px;padding:12px 16px;font:inherit;font-size:15px;color:var(--text)}
+.btn-gold{background:linear-gradient(135deg,var(--gold),#d9a520);color:#1a1405;width:100%;
+  font-size:20px;letter-spacing:1px;padding:15px;transition:transform .12s, box-shadow .12s}
+.btn-gold:not(:disabled):hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(245,197,66,.35)}
+.btn-gold:disabled{filter:grayscale(.8);opacity:.5;cursor:not-allowed}
+.btn-ghost{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.16)}
+.btn-ghost:hover{background:rgba(255,255,255,.13)}
+select{flex:1;background:#11152a;color:var(--text);border:1px solid rgba(255,255,255,.18);
+  border-radius:10px;padding:10px;font-family:system-ui;font-size:14px;min-width:0}
+label.sl{display:block;margin:12px 0 2px;font-size:13px;color:var(--muted);font-family:system-ui;line-height:1.35}
+label.sl b{color:var(--text)}
+input[type=range]{width:100%;accent-color:var(--gold)}
+.check{display:flex;gap:8px;align-items:center;font-family:system-ui;font-size:14px;margin-right:16px;cursor:pointer}
+.meterTrack{height:14px;background:#11152a;border-radius:8px;overflow:hidden;border:1px solid rgba(255,255,255,.12);flex:1}
+#miniFill{height:100%;width:0%;background:linear-gradient(90deg,#6ee77a,#f5c542,#ff5d5d)}
+.status{font-family:system-ui;font-size:12.5px;color:var(--muted);white-space:nowrap}
+.hint{margin-top:15px;text-align:center;font-family:system-ui;font-size:12px;color:var(--muted)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 24px}
+@media(max-width:480px){.grid2{grid-template-columns:1fr}}
+#hud{position:fixed;top:14px;right:14px;display:flex;gap:8px;z-index:15}
+#hud button{padding:9px 13px;font-size:17px;border-radius:10px}
+#overPanel{text-align:center}
+#overPanel h1{color:var(--danger)}
+.bigScore{font-size:68px;color:var(--gold);margin:6px 0 0;text-shadow:0 0 30px rgba(245,197,66,.5)}
+.recScore{color:var(--muted);font-family:system-ui;margin:4px 0 22px}
+.btnRow{display:flex;gap:12px}
+.btnRow button{flex:1}
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+
+<div id="hud" class="hidden">
+  <button class="btn-ghost" id="btnPause" title="Пауза (Space)">⏸</button>
+  <button class="btn-ghost" id="btnFs" title="Весь экран (F)">⛶</button>
+  <button class="btn-ghost" id="btnMenu" title="Меню (Esc)">⚙</button>
+</div>
+
+<div id="menu" class="overlay">
+  <div class="panel">
+    <h1>🎤 ГОЛОСОВАЯ ПТИЧКА</h1>
+    <div class="sub">интерактив для мероприятий — птичкой управляет громкость голоса</div>
+
+    <div class="row">
+      <button class="btn-ghost" id="btnMic" style="flex:1">🎙 Включить микрофон</button>
+      <button class="btn-ghost" id="btnRefresh" title="Обновить список микрофонов">↻</button>
+    </div>
+    <div class="row"><select id="micSel" disabled><option>— сначала включите микрофон —</option></select></div>
+    <div class="row">
+      <div class="meterTrack"><div id="miniFill"></div></div>
+      <span class="status" id="dbTxt" style="min-width:62px;text-align:right">— дБ</span>
+    </div>
+    <div class="row">
+      <button class="btn-ghost" id="btnCal" style="flex:1">📏 Калибровка фона зала (1,5 сек)</button>
+      <span class="status" id="calTxt">фон: −52 дБ</span>
+    </div>
+
+    <div class="grid2">
+      <div>
+        <label class="sl">Чувствительность: <b id="vSens">30 дБ</b><br>
+        <span style="font-size:11px">меньше = легче поднять птичку</span></label>
+        <input type="range" id="sens" min="15" max="50" value="30">
+      </div>
+      <div>
+        <label class="sl">Плавность: <b id="vSm">3</b><br>
+        <span style="font-size:11px">больше = птичка спокойнее</span></label>
+        <input type="range" id="smooth" min="1" max="10" value="3">
+      </div>
+      <div>
+        <label class="sl">Проход в стенах: <b id="vGap">32%</b></label>
+        <input type="range" id="gap" min="20" max="45" value="32">
+      </div>
+      <div>
+        <label class="sl">Скорость: <b id="vSpd">4</b></label>
+        <input type="range" id="spd" min="1" max="10" value="4">
+      </div>
+    </div>
+
+    <div class="row" style="margin-top:8px">
+      <label class="check"><input type="checkbox" id="train"> Тренировка (без проигрыша)</label>
+      <label class="check"><input type="checkbox" id="snd" checked> Звуки</label>
+    </div>
+
+    <button class="btn-gold" id="btnStart" disabled style="margin-top:16px">▶ СТАРТ</button>
+    <div class="hint">Chrome рекомендуется • F — весь экран • Space — пауза • Esc — меню</div>
+  </div>
+</div>
+
+<div id="over" class="overlay hidden">
+  <div class="panel" id="overPanel">
+    <h1>💥 СТОЛКНОВЕНИЕ!</h1>
+    <div class="bigScore" id="finalScore">0</div>
+    <div class="recScore">рекорд вечера: <span id="recScore">0</span></div>
+    <div class="btnRow">
+      <button class="btn-gold" id="btnAgain">🔁 ЕЩЁ РАЗ</button>
+      <button class="btn-ghost" id="btnToMenu">⚙ Меню</button>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* ================= CANVAS ================= */
+const cv = document.getElementById('game'), cx = cv.getContext('2d');
+let W=0, H=0, DPR=1;
+function resize(){
+  DPR = Math.min(2, window.devicePixelRatio||1);
+  W = innerWidth; H = innerHeight;
+  cv.width = W*DPR; cv.height = H*DPR;
+  cx.setTransform(DPR,0,0,DPR,0,0);
+}
+addEventListener('resize', ()=>{ resize(); makeStars(); });
+resize();
+
+/* ================= DOM ================= */
+const $ = id => document.getElementById(id);
+const menuEl=$('menu'), overEl=$('over'), hudEl=$('hud');
+const micSel=$('micSel'), miniFill=$('miniFill'), dbTxt=$('dbTxt'), calTxt=$('calTxt');
+
+/* ================= ПАРАМЕТРЫ ================= */
+const P = { sens:30, smooth:3, gap:32, spd:4, train:false, snd:true };
+function bindSlider(id, lab, fmt){
+  const el = $(id);
+  el.addEventListener('input', ()=>{ P[id] = +el.value; $(lab).textContent = fmt(el.value); });
+}
+bindSlider('sens','vSens', v=>v+' дБ');
+bindSlider('smooth','vSm', v=>v);
+bindSlider('gap','vGap', v=>v+'%');
+bindSlider('spd','vSpd', v=>v);
+$('train').onchange = e => P.train = e.target.checked;
+$('snd').onchange   = e => P.snd   = e.target.checked;
+
+/* ================= АУДИО ================= */
+let audioCtx=null, analyser=null, srcNode=null, micStream=null, buf=null, micOn=false;
+let db=-90, level=0, levelSm=0, noiseFloor=-52;
+let calArr=null, calUntil=0;
+
+async function startMic(deviceId){
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+    alert('Браузер не даёт доступ к микрофону с локального файла.\nОткрой в Chrome или залей файл на GitHub Pages (https).');
+    return;
+  }
+  try{
+    if(micStream) micStream.getTracks().forEach(t=>t.stop());
+    if(srcNode){ try{ srcNode.disconnect(); }catch(e){} }
+    const cs = { audio:{ echoCancellation:false, noiseSuppression:false, autoGainControl:false } };
+    if(deviceId) cs.audio.deviceId = { exact: deviceId };
+    micStream = await navigator.mediaDevices.getUserMedia(cs);
+    audioCtx = audioCtx || new (window.AudioContext||window.webkitAudioContext)();
+    if(audioCtx.state==='suspended') await audioCtx.resume();
+    srcNode  = audioCtx.createMediaStreamSource(micStream);
+    analyser = audioCtx.createAnalyser();
+    analyser.fftSize = 2048;
+    srcNode.connect(analyser);
+    buf = new Float32Array(analyser.fftSize);
+    micOn = true;
+    setMicStatus('🎙 Микрофон работает', true);
+    $('btnStart').disabled = false;
+    await fillDevices();
+  }catch(err){
+    micOn = false;
+    setMicStatus('⛔ Нет доступа к микрофону', false);
+    alert('Не удалось включить микрофон.\n\nПроверь:\n1) Разрешение в браузере (значок 🎤 в адресной строке)\n2) macOS: Системные настройки → Конфиденциальность и безопасность → Микрофон → разреши браузеру\n3) Надёжнее всего открыть по https (GitHub Pages) в Chrome');
+  }
+}
+function setMicStatus(txt, ok){
+  const b = $('btnMic');
+  b.textContent = txt;
+  b.style.borderColor = ok ? 'rgba(110,231,122,.6)' : 'rgba(255,93,93,.6)';
+}
+async function fillDevices(){
+  try{
+    const devs = await navigator.mediaDevices.enumerateDevices();
+    const ins = devs.filter(d=>d.kind==='audioinput');
+    micSel.innerHTML = '';
+    ins.forEach((d,i)=>{
+      const o = document.createElement('option');
+      o.value = d.deviceId;
+      o.textContent = d.label || ('Микрофон '+(i+1));
+      micSel.appendChild(o);
+    });
+    micSel.disabled = false;
+    if(micStream){
+      const tId = micStream.getAudioTracks()[0].getSettings().deviceId;
+      if(tId) micSel.value = tId;
+    }
+  }catch(e){}
+}
+micSel.onchange = ()=> startMic(micSel.value);
+$('btnMic').onclick = ()=> startMic(micSel.disabled ? undefined : (micSel.value || undefined));
+$('btnRefresh').onclick = fillDevices;
+if(navigator.mediaDevices && navigator.mediaDevices.addEventListener){
+  navigator.mediaDevices.addEventListener('devicechange', ()=>{ if(micOn) fillDevices(); });
+}
+$('btnCal').onclick = ()=>{
+  if(!micOn){ calTxt.textContent = 'сначала микрофон'; return; }
+  calArr = []; calUntil = performance.now() + 1500;
+  calTxt.textContent = '⏳ тихо в зале...';
+};
+
+function meter(dt){
+  if(!analyser) return;
+  analyser.getFloatTimeDomainData(buf);
+  let s = 0;
+  for(let i=0;i<buf.length;i++){ const v = buf[i]; s += v*v; }
+  const rms = Math.sqrt(s/buf.length);
+  db = 20*Math.log10(rms + 1e-8);
+  const minDb = noiseFloor + 6;
+  level = Math.min(1, Math.max(0, (db - minDb) / P.sens));
+  const a = 1 - Math.pow(1 - (0.5/P.smooth), dt*60);
+  levelSm += (level - levelSm) * a;
+
+  const now = performance.now();
+  if(calArr){
+    if(now < calUntil){ calArr.push(db); }
+    else{
+      if(calArr.length) noiseFloor = calArr.reduce((x,y)=>x+y,0)/calArr.length;
+      calTxt.textContent = 'фон: ' + noiseFloor.toFixed(0) + ' дБ ✓';
+      calArr = null;
+    }
+  }
+  if(state==='menu'){
+    miniFill.style.width = (levelSm*100).toFixed(1) + '%';
+    dbTxt.textContent = db <= -89 ? '— дБ' : db.toFixed(0) + ' дБ';
+  }
+}
+
+/* короткие звуки очков/удара (через колонки — задорно на банкете) */
+function beep(f, d, type, g){
+  if(!P.snd || !audioCtx) return;
+  try{
+    const o = audioCtx.createOscillator(), gn = audioCtx.createGain();
+    o.type = type || 'sine'; o.frequency.value = f;
+    gn.gain.setValueAtTime(g || 0.12, audioCtx.currentTime);
+    gn.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + d);
+    o.connect(gn); gn.connect(audioCtx.destination);
+    o.start(); o.stop(audioCtx.currentTime + d + 0.02);
+  }catch(e){}
+}
+function crashSound(){ beep(180,.3,'sawtooth',.22); setTimeout(()=>beep(90,.4,'sawtooth',.22), 60); }
+
+/* ================= ИГРА ================= */
+let state = 'menu'; // menu | prep | play | pause | over
+const bird = { x:0, y:0, r:18, tilt:0 };
+let walls=[], score=0, record=0, misses=0, prepT=0, shake=0, invuln=0, t=0, diffMult=1, frameN=0;
+let trail=[], stars=[];
+
+function makeStars(){
+  stars = Array.from({length:150}, ()=>({
+    x: Math.random()*W, y: Math.random()*H,
+    z: .3 + Math.random(), r: .4 + Math.random()*1.6
+  }));
+}
+makeStars();
+
+function spacing(){ return Math.max(340, W*0.32); }
+
+function resetGame(){
+  walls=[]; trail=[]; score=0; misses=0; diffMult=1; shake=0; invuln=0;
+  bird.x = W*0.26; bird.y = H/2; bird.tilt = 0;
+  bird.r = Math.max(15, H*0.026);
+}
+function startGame(){
+  resetGame(); prepT = 3; state = 'prep';
+  menuEl.classList.add('hidden');
+  overEl.classList.add('hidden');
+  hudEl.classList.remove('hidden');
+  $('btnPause').textContent = '⏸';
+}
+function goMenu(){
+  state = 'menu';
+  overEl.classList.add('hidden');
+  hudEl.classList.add('hidden');
+  menuEl.classList.remove('hidden');
+}
+
+function spawnWall(){
+  const gapH = H * (P.gap/100);
+  const margin = gapH/2 + H*0.07;
+  let gy = margin + Math.random()*(H - 2*margin);
+  const prev = walls[walls.length-1];
+  if(prev) gy = Math.min(prev.gapY + H*0.38, Math.max(prev.gapY - H*0.38, gy));
+  gy = Math.min(H - margin, Math.max(margin, gy));
+  const x = prev ? Math.max(W+60, prev.x + spacing()) : W+60;
+  walls.push({ x, gapY: gy, gapH, w: Math.max(70, W*0.05), passed:false });
+}
+
+function gameOver(){
+  state = 'over'; shake = 14;
+  record = Math.max(record, score);
+  crashSound();
+  setTimeout(()=>{
+    $('finalScore').textContent = score;
+    $('recScore').textContent = record;
+    overEl.classList.remove('hidden');
+  }, 550);
+}
+
+function update(dt){
+  t += dt; frameN++;
+  meter(dt);
+  for(const s of stars){ s.x -= s.z*18*dt; if(s.x < -3){ s.x = W+3; s.y = Math.random()*H; } }
+
+  if(state!=='play' && state!=='prep') return;
+
+  // птичка следует за громкостью
+  const pad = H*0.05;
+  const ty = pad + (1-levelSm)*(H - 2*pad);
+  const py = bird.y;
+  bird.y += (ty - bird.y) * (1 - Math.pow(0.62, dt*60));
+  const tTar = Math.max(-.45, Math.min(.45, (bird.y - py)*0.025));
+  bird.tilt += (tTar - bird.tilt)*0.18;
+
+  if((frameN & 1)===0) trail.push({ x:bird.x - bird.r*0.8, y:bird.y, a:.55, r:bird.r*0.45 });
+  for(const p of trail){ p.x -= 130*dt; p.a -= dt*1.5; }
+  trail = trail.filter(p=>p.a>0);
+
+  if(state==='prep'){
+    prepT -= dt;
+    if(prepT <= 0){ state='play'; spawnWall(); }
+    return;
+  }
+
+  // движение стен
+  const speed = (120 + P.spd*45) * diffMult;
+  for(const w of walls) w.x -= speed*dt;
+  if(!walls.length || walls[walls.length-1].x < W - spacing()) spawnWall();
+  walls = walls.filter(w => w.x + w.w > -40);
+  if(invuln > 0) invuln -= dt;
+
+  for(const w of walls){
+    if(!w.passed && w.x + w.w < bird.x - bird.r){
+      w.passed = true; score++;
+      diffMult = Math.min(2, 1 + score*0.03);
+      beep(880, .07, 'sine', .12);
+    }
+    const hr = bird.r*0.78;
+    if(bird.x + hr > w.x && bird.x - hr < w.x + w.w){
+      if(bird.y - hr < w.gapY - w.gapH/2 || bird.y + hr > w.gapY + w.gapH/2){
+        if(P.train){
+          if(invuln <= 0){ misses++; invuln = 1.2; beep(140,.25,'sawtooth',.2); }
+        } else {
+          gameOver();
+          return;
+        }
+      }
+    }
+  }
+}
+
+/* ================= РИСОВАНИЕ ================= */
+function rRect(x,y,w,h,r){
+  cx.beginPath();
+  cx.moveTo(x+r,y);
+  cx.arcTo(x+w,y,x+w,y+h,r);
+  cx.arcTo(x+w,y+h,x,y+h,r);
+  cx.arcTo(x,y+h,x,y,r);
+  cx.arcTo(x,y,x+w,y,r);
+  cx.closePath();
+}
+
+function drawWalls(){
+  for(const w of walls){
+    const topH = w.gapY - w.gapH/2, botY = w.gapY + w.gapH/2;
+    const gr = cx.createLinearGradient(w.x,0,w.x+w.w,0);
+    gr.addColorStop(0,'#1d2447'); gr.addColorStop(.5,'#2c3766'); gr.addColorStop(1,'#171d3a');
+    cx.fillStyle = gr;
+    rRect(w.x,-12,w.w,topH+12,10); cx.fill();
+    rRect(w.x,botY,w.w,H-botY+12,10); cx.fill();
+    cx.fillStyle = 'rgba(245,197,66,.92)';
+    cx.shadowColor = 'rgba(245,197,66,.8)'; cx.shadowBlur = 16;
+    rRect(w.x-5, topH-7, w.w+10, 7, 4); cx.fill();
+    rRect(w.x-5, botY,   w.w+10, 7, 4); cx.fill();
+    cx.shadowBlur = 0;
+  }
+}
+
+function drawTrail(){
+  for(const p of trail){
+    cx.globalAlpha = p.a;
+    cx.fillStyle = '#f5c542';
+    cx.beginPath(); cx.arc(p.x, p.y, p.r, 0, Math.PI*2); cx.fill();
+  }
+  cx.globalAlpha = 1;
+}
+
+function drawBird(){
+  const b = bird, fl = Math.sin(t*14 + levelSm*8);
+  cx.save();
+  cx.translate(b.x, b.y);
+  cx.rotate(b.tilt);
+  if(invuln > 0 && Math.floor(t*10)%2===0) cx.globalAlpha = .35;
+  // свечение
+  const rg = cx.createRadialGradient(0,0,b.r*.2, 0,0,b.r*2.4);
+  rg.addColorStop(0,'rgba(255,215,106,.5)');
+  rg.addColorStop(1,'rgba(255,215,106,0)');
+  cx.fillStyle = rg;
+  cx.beginPath(); cx.arc(0,0,b.r*2.4,0,Math.PI*2); cx.fill();
+  // тело
+  cx.fillStyle = '#ffd76a';
+  cx.beginPath(); cx.arc(0,0,b.r,0,Math.PI*2); cx.fill();
+  // крыло (машет от голоса)
+  cx.fillStyle = '#e89c1e';
+  cx.beginPath(); cx.ellipse(-b.r*.15, 0, b.r*.62, b.r*.4, -0.5 + fl*0.5, 0, Math.PI*2); cx.fill();
+  // глаз
+  cx.fillStyle = '#fff';
+  cx.beginPath(); cx.arc(b.r*.42, -b.r*.3, b.r*.3, 0, Math.PI*2); cx.fill();
+  cx.fillStyle = '#1a1405';
+  cx.beginPath(); cx.arc(b.r*.5, -b.r*.3, b.r*.15, 0, Math.PI*2); cx.fill();
+  // клюв
+  cx.fillStyle = '#ff9b3d';
+  cx.beginPath();
+  cx.moveTo(b.r*.9, -b.r*.05);
+  cx.lineTo(b.r*1.5, b.r*.12);
+  cx.lineTo(b.r*.85, b.r*.32);
+  cx.closePath(); cx.fill();
+  cx.restore();
+  cx.globalAlpha = 1;
+}
+
+function drawMeterBar(){
+  const bw = 20, bh = H*0.55, x = 22, y = (H-bh)/2;
+  cx.fillStyle = 'rgba(255,255,255,.07)';
+  rRect(x,y,bw,bh,9); cx.fill();
+  const fh = bh * levelSm;
+  const gr = cx.createLinearGradient(0, y+bh, 0, y);
+  gr.addColorStop(0,'#6ee77a'); gr.addColorStop(.6,'#f5c542'); gr.addColorStop(1,'#ff5d5d');
+  cx.save();
+  rRect(x,y,bw,bh,9); cx.clip();
+  cx.fillStyle = gr;
+  cx.fillRect(x, y+bh-fh, bw, fh);
+  cx.restore();
+  cx.fillStyle = 'rgba(255,255,255,.55)';
+  cx.font = '12px system-ui';
+  cx.textAlign = 'center';
+  cx.fillText(db <= -89 ? '—' : db.toFixed(0)+' дБ', x+bw/2, y+bh+18);
+}
+
+function drawHUD(){
+  cx.textAlign = 'center';
+  if(state==='prep'){
+    cx.fillStyle = '#fff';
+    cx.font = '28px "Russo One", system-ui';
+    cx.fillText('Управляй громкостью голоса!', W/2, H*0.32);
+    cx.fillStyle = '#f5c542';
+    cx.font = '120px "Russo One", system-ui';
+    cx.shadowColor = 'rgba(245,197,66,.7)'; cx.shadowBlur = 30;
+    cx.fillText(Math.max(1, Math.ceil(prepT)), W/2, H*0.52);
+    cx.shadowBlur = 0;
+  }
+  if(state==='play' || state==='over' || state==='pause'){
+    cx.fillStyle = '#fff';
+    cx.font = '64px "Russo One", system-ui';
+    cx.shadowColor = 'rgba(0,0,0,.5)'; cx.shadowBlur = 8;
+    cx.fillText(score, W/2, 86);
+    cx.shadowBlur = 0;
+    cx.font = '14px system-ui';
+    cx.fillStyle = 'rgba(255,255,255,.55)';
+    cx.fillText(P.train ? ('тренировка • промахи: '+misses) : ('рекорд: '+record), W/2, 112);
+  }
+  if(state==='pause'){
+    cx.fillStyle = 'rgba(4,6,14,.55)';
+    cx.fillRect(0,0,W,H);
+    cx.fillStyle = '#f5c542';
+    cx.font = '56px "Russo One", system-ui';
+    cx.fillText('ПАУЗА', W/2, H/2);
+    cx.font = '16px system-ui';
+    cx.fillStyle = '#9aa3c8';
+    cx.fillText('Space — продолжить', W/2, H/2 + 42);
+  }
+}
+
+function draw(){
+  // фон
+  const g = cx.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,'#0d1124'); g.addColorStop(1,'#070912');
+  cx.fillStyle = g;
+  cx.fillRect(0,0,W,H);
+  // звёзды
+  for(const s of stars){
+    cx.globalAlpha = 0.18 + 0.45*(s.z-0.3);
+    cx.fillStyle = '#fff';
+    cx.beginPath(); cx.arc(s.x, s.y, s.r, 0, Math.PI*2); cx.fill();
+  }
+  cx.globalAlpha = 1;
+
+  if(state==='menu') return;
+
+  cx.save();
+  if(shake > 0){
+    shake *= 0.9;
+    cx.translate((Math.random()-.5)*shake, (Math.random()-.5)*shake);
+  }
+  drawWalls();
+  drawTrail();
+  drawBird();
+  cx.restore();
+
+  drawMeterBar();
+  drawHUD();
+}
+
+/* ================= УПРАВЛЕНИЕ ================= */
+$('btnStart').onclick = ()=>{ if(micOn) startGame(); };
+$('btnAgain').onclick = startGame;
+$('btnToMenu').onclick = goMenu;
+$('btnMenu').onclick = goMenu;
+$('btnPause').onclick = togglePause;
+$('btnFs').onclick = toggleFs;
+
+function togglePause(){
+  if(state==='play'){ state='pause'; $('btnPause').textContent='▶'; }
+  else if(state==='pause'){ state='play'; $('btnPause').textContent='⏸'; }
+}
+function toggleFs(){
+  if(document.fullscreenElement) document.exitFullscreen();
+  else document.documentElement.requestFullscreen().catch(()=>{});
+}
+addEventListener('keydown', e=>{
+  if(e.code==='Space'){
+    e.preventDefault();
+    if(state==='play' || state==='pause') togglePause();
+    else if(state==='over') startGame();
+    else if(state==='menu' && micOn) startGame();
+  }
+  if(e.key==='f' || e.key==='F' || e.key==='а' || e.key==='А') toggleFs();
+  if(e.key==='Escape' && state!=='menu') goMenu();
+});
+cv.addEventListener('click', ()=>{ if(state==='over') startGame(); });
+
+/* ================= ЦИКЛ ================= */
+let last = performance.now();
+function loop(now){
+  const dt = Math.min(0.05, (now-last)/1000) || 0.016;
+  last = now;
+  update(dt);
+  draw();
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
