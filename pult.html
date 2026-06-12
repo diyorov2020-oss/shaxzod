@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Пульт интерактивов 🎛</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Russo+One&display=swap" rel="stylesheet">
+<style>
+:root{
+  --gold:#f5c542; --bg:#070912; --text:#eef1ff; --muted:#8b93b8;
+  --line:rgba(245,197,66,.25);
+}
+*{box-sizing:border-box}
+body{
+  margin:0; min-height:100vh; color:var(--text);
+  background:
+    radial-gradient(1100px 480px at 50% -8%, rgba(245,197,66,.09), transparent 60%),
+    var(--bg);
+  font-family:-apple-system,'Segoe UI',Roboto,system-ui,sans-serif;
+}
+.wrap{max-width:1080px;margin:0 auto;padding:42px 22px 60px}
+
+header{text-align:center;margin-bottom:8px}
+h1{
+  font-family:'Russo One',system-ui;font-weight:400;color:var(--gold);
+  font-size:clamp(26px,5vw,42px);letter-spacing:1px;margin:0;
+}
+.subtitle{color:var(--muted);font-size:14px;margin:8px 0 18px}
+.pills{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.pill{
+  display:inline-flex;align-items:center;gap:6px;
+  border:1px solid var(--line);border-radius:999px;
+  padding:7px 15px;font-size:13px;color:var(--muted);
+}
+.pill b{color:var(--text);font-weight:600}
+
+.sec{margin-top:40px}
+.secHead{
+  display:flex;gap:13px;align-items:center;
+  border-bottom:1px solid rgba(255,255,255,.08);
+  padding-bottom:11px;margin-bottom:16px;
+}
+.secEmoji{font-size:26px;line-height:1}
+.secHead h2{
+  font-family:'Russo One',system-ui;font-weight:400;
+  font-size:18px;margin:0;letter-spacing:.5px;
+}
+.secHead p{margin:3px 0 0;font-size:12.5px;color:var(--muted)}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(225px,1fr));gap:14px}
+.card{
+  display:block;border-radius:16px;padding:16px 16px 18px;
+  background:linear-gradient(160deg,#121833,#0d1226);
+  border:1px solid rgba(255,255,255,.09);
+  text-decoration:none;color:var(--text);
+  animation:pop .45s both;animation-delay:calc(var(--i)*45ms);
+  transition:transform .15s, border-color .15s, box-shadow .15s;
+}
+.card.ready:hover{
+  transform:translateY(-3px);border-color:var(--gold);
+  box-shadow:0 12px 30px rgba(245,197,66,.18);
+}
+.card.ready:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+.card.soon{opacity:.45;border-style:dashed;cursor:default}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.ico{font-size:30px;line-height:1}
+.led{
+  font-size:10.5px;letter-spacing:1.5px;padding:4px 9px;border-radius:999px;
+  border:1px solid rgba(255,255,255,.22);color:var(--muted);white-space:nowrap;
+}
+.led.on{
+  color:#1a1405;background:var(--gold);border-color:var(--gold);
+  box-shadow:0 0 14px rgba(245,197,66,.55);font-weight:700;
+}
+.name{font-family:'Russo One',system-ui;font-size:16px;margin-bottom:6px;letter-spacing:.3px}
+.desc{font-size:12.5px;color:var(--muted);line-height:1.45}
+
+footer{margin-top:54px;text-align:center;color:rgba(139,147,184,.55);font-size:12px}
+
+@keyframes pop{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.card{animation:none}*{transition:none!important}}
+@media(max-width:480px){
+  .grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:11px}
+  .card{padding:13px 13px 15px}
+  .desc{font-size:11.5px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>🎛 ПУЛЬТ ИНТЕРАКТИВОВ</h1>
+    <div class="subtitle">игры и инструменты для живых мероприятий — клик по карточке, F — весь экран</div>
+    <div class="pills">
+      <span class="pill">✅ Готово: <b id="statReady">0</b></span>
+      <span class="pill">🛠 В планах: <b id="statSoon">0</b></span>
+    </div>
+  </header>
+
+  <div id="app"></div>
+
+  <footer>Diyorov Production · Ташкент</footer>
+</div>
+
+<script>
+"use strict";
+
+/* ============ РАЗДЕЛЫ ============ */
+const SECTIONS = [
+  { id:'voice', emoji:'🎤', title:'ГОЛОСОВЫЕ ИГРЫ',      desc:'участник управляет микрофоном — Boya или радиомикрофон' },
+  { id:'tools', emoji:'🎪', title:'ИНСТРУМЕНТЫ ВЕДУЩЕГО', desc:'запускаются клавишами, работают без микрофона' },
+  { id:'quiz',  emoji:'🎬', title:'ВИКТОРИНЫ',            desc:'контент-игры: вопросы и музыка под событие' },
+];
+
+/* ============ ИГРЫ И ИНСТРУМЕНТЫ ============
+   ✏️ КАК ДОБАВИТЬ НОВУЮ ИГРУ:
+   1. Скопируй любую строку ниже
+   2. Поменяй название, описание и имя файла (href)
+   3. Поставь ready:true, когда файл загружен в репозиторий рядом с этой страницей
+
+   Пример для колеса Camelot — впиши реальное имя файла и убери // в начале строки:
+   // { sec:'tools', emoji:'🎚', title:'Camelot Wheel', desc:'Колесо тональностей для сведения треков', href:'ИМЯ-ФАЙЛА.html', ready:true },
+*/
+const APPS = [
+  /* — голосовые — */
+  { sec:'voice', emoji:'🐦', title:'Голосовая птичка',  desc:'Громче — выше, тише — ниже. Пролети между стенами и набери рекорд вечера', href:'ptichka.html', ready:true },
+  { sec:'voice', emoji:'👏', title:'Аплодисментометр',  desc:'Батл столов: чьи аплодисменты громче — гонка полосок и фанфары победителю', href:'aplodismenty.html', ready:true },
+  { sec:'voice', emoji:'🏎', title:'Голосовые гонки',   desc:'Машинка едет от крика — команды по очереди, лучшее время побеждает', href:'', ready:false },
+  { sec:'voice', emoji:'🎈', title:'Надуй шарик',       desc:'Шарик растёт от голоса и лопается с конфетти на весь экран', href:'sharik.html', ready:true },
+  { sec:'voice', emoji:'🎯', title:'Удержи зону',       desc:'Держи голос ровно в зелёной полосе 10 секунд — сложнее, чем кажется', href:'zona.html', ready:true },
+  { sec:'voice', emoji:'🤫', title:'Тишина!',           desc:'Обратная игра: кто первый издаст звук — тот проиграл', href:'', ready:false },
+  { sec:'voice', emoji:'🎼', title:'Угадай ноту',       desc:'Спой ноту с экрана — игра по высоте голоса для поющих гостей', href:'', ready:false },
+
+  /* — инструменты — */
+  { sec:'tools', emoji:'📊', title:'Шумометр',          desc:'Уровень шума зала в реальном времени — децибелы на большом экране', href:'shumometr.html', ready:true },
+  { sec:'tools', emoji:'🎡', title:'Колесо фортуны',    desc:'Имена гостей, фанты, призы — сектора редактируются под каждое событие', href:'koleso.html', ready:true },
+  { sec:'tools', emoji:'🎲', title:'Жеребьёвка команд', desc:'Список гостей красиво перемешивается на команды прямо на экране', href:'', ready:false },
+  { sec:'tools', emoji:'⏱', title:'Таймер конкурса',    desc:'Драматичный отсчёт с большими цифрами и звуком финала', href:'timer.html', ready:true },
+  { sec:'tools', emoji:'🏆', title:'Табло счёта',       desc:'Очки команд большими цифрами — плюсуешь с клавиатуры, звук за каждое очко', href:'tablo.html', ready:true },
+
+  /* — викторины — */
+  { sec:'quiz', emoji:'🎵', title:'Угадай мелодию',     desc:'Таймер и табло на экране — музыку даёшь сам с пульта', href:'', ready:false },
+  { sec:'quiz', emoji:'💰', title:'Миллионер',          desc:'Викторина с подсказками — вопросы про молодожёнов или про компанию', href:'', ready:false },
+  { sec:'quiz', emoji:'😄', title:'Эмодзи-загадки',     desc:'Угадай фильм или песню по набору эмодзи на экране', href:'', ready:false },
+];
+
+/* ============ РЕНДЕР ============ */
+function cardHTML(a, i){
+  const inner =
+    '<div class="top"><span class="ico">' + a.emoji + '</span>' +
+    '<span class="led' + (a.ready ? ' on' : '') + '">' + (a.ready ? 'ГОТОВО' : 'СКОРО') + '</span></div>' +
+    '<div class="name">' + a.title + '</div>' +
+    '<div class="desc">' + a.desc + '</div>';
+  if(a.ready && a.href){
+    return '<a class="card ready" style="--i:' + i + '" href="' + a.href + '">' + inner + '</a>';
+  }
+  return '<div class="card soon" style="--i:' + i + '" aria-disabled="true">' + inner + '</div>';
+}
+
+function render(){
+  let html = '';
+  for(const s of SECTIONS){
+    const items = APPS.filter(a => a.sec === s.id);
+    if(!items.length) continue;
+    html += '<section class="sec">' +
+      '<div class="secHead"><span class="secEmoji">' + s.emoji + '</span>' +
+      '<div><h2>' + s.title + '</h2><p>' + s.desc + '</p></div></div>' +
+      '<div class="grid">';
+    items.forEach((a, i) => { html += cardHTML(a, i); });
+    html += '</div></section>';
+  }
+  document.getElementById('app').innerHTML = html;
+  const ready = APPS.filter(a => a.ready).length;
+  document.getElementById('statReady').textContent = ready;
+  document.getElementById('statSoon').textContent = APPS.length - ready;
+}
+render();
+</script>
+</body>
+</html>

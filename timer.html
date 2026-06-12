@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Таймер конкурса ⏱</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Russo+One&display=swap" rel="stylesheet">
+<style>
+:root{--gold:#f5c542;--bg:#070912;--text:#eef1ff;--muted:#8b93b8;--danger:#ff5d5d}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:radial-gradient(900px 500px at 50% -10%,rgba(245,197,66,.08),transparent 60%),var(--bg);
+  color:var(--text);font-family:'Russo One',-apple-system,'Segoe UI',Roboto,sans-serif;overflow:hidden}
+body{height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4vh}
+button{cursor:pointer;border:0;border-radius:12px;padding:12px 18px;font:inherit;font-size:15px;color:var(--text)}
+.btn-gold{background:linear-gradient(135deg,var(--gold),#d9a520);color:#1a1405;font-size:18px;letter-spacing:.5px;padding:14px 26px}
+.btn-ghost{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.16)}
+.home{position:fixed;top:14px;left:14px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.16);border-radius:10px;padding:9px 13px;color:var(--gold);text-decoration:none;font-size:14px;z-index:15}
+#hud{position:fixed;top:14px;right:14px;display:flex;gap:8px;z-index:15}
+#hud button{padding:9px 13px;font-size:17px;border-radius:10px}
+.ringWrap{position:relative;width:min(64vh,86vw);aspect-ratio:1}
+svg{width:100%;height:100%;transform:rotate(-90deg)}
+.track{fill:none;stroke:rgba(255,255,255,.08);stroke-width:14}
+.bar{fill:none;stroke:var(--gold);stroke-width:14;stroke-linecap:round;
+  filter:drop-shadow(0 0 14px rgba(245,197,66,.55));transition:stroke .2s}
+.timeBox{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px}
+#time{font-size:clamp(60px,16vh,150px);letter-spacing:2px;font-variant-numeric:tabular-nums;text-shadow:0 0 30px rgba(245,197,66,.25)}
+#time.danger{color:var(--danger);text-shadow:0 0 36px rgba(255,93,93,.6)}
+#stateTxt{color:var(--muted);font-family:system-ui;font-size:15px}
+.presets,.controls{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;z-index:5}
+.presets button.active{border-color:var(--gold);color:var(--gold)}
+#custom{width:96px;background:#11152a;color:var(--text);border:1px solid rgba(255,255,255,.18);
+  border-radius:12px;padding:12px;font:inherit;font-size:15px;text-align:center}
+.hintLine{color:rgba(139,147,184,.7);font-family:system-ui;font-size:12.5px;text-align:center}
+body.over{animation:flashBg .5s 4}
+@keyframes flashBg{0%,100%{background-color:var(--bg)}50%{background-color:#3a0d14}}
+@media(max-height:560px){body{gap:2vh}.ringWrap{width:min(52vh,80vw)}}
+</style>
+</head>
+<body>
+<a class="home" href="pult.html">⌂ ПУЛЬТ</a>
+<div id="hud">
+  <button class="btn-ghost" id="btnSnd" title="Звуки">🔊</button>
+  <button class="btn-ghost" id="btnFs" title="Весь экран (F)">⛶</button>
+</div>
+
+<div class="presets" id="presets">
+  <button class="btn-ghost" data-s="10">10 сек</button>
+  <button class="btn-ghost active" data-s="30">30 сек</button>
+  <button class="btn-ghost" data-s="60">1 мин</button>
+  <button class="btn-ghost" data-s="120">2 мин</button>
+  <button class="btn-ghost" data-s="300">5 мин</button>
+  <input id="custom" placeholder="мм:сс">
+</div>
+
+<div class="ringWrap">
+  <svg viewBox="0 0 300 300">
+    <circle class="track" cx="150" cy="150" r="140"/>
+    <circle class="bar" id="bar" cx="150" cy="150" r="140"/>
+  </svg>
+  <div class="timeBox">
+    <div id="time">0:30</div>
+    <div id="stateTxt">готов к старту</div>
+  </div>
+</div>
+
+<div class="controls">
+  <button class="btn-gold" id="btnStart">▶ СТАРТ</button>
+  <button class="btn-ghost" id="btnReset">↺ Сброс (R)</button>
+</div>
+<div class="hintLine">Space — старт/пауза • R — сброс • F — весь экран • тап по цифрам — старт/пауза</div>
+
+<script>
+"use strict";
+const $=id=>document.getElementById(id);
+const C=2*Math.PI*140;
+const bar=$('bar');
+bar.style.strokeDasharray=C;
+
+let total=30,remaining=30,running=false,lastTickSec=null,sndOn=true,finished=false;
+let rafLast=performance.now();
+
+let audioCtx=null;
+function beep(f,d,type,g){
+  if(!sndOn)return;
+  try{
+    audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)();
+    if(audioCtx.state==='suspended')audioCtx.resume();
+    const o=audioCtx.createOscillator(),gn=audioCtx.createGain();
+    o.type=type||'sine';o.frequency.value=f;
+    gn.gain.setValueAtTime(g||0.15,audioCtx.currentTime);
+    gn.gain.exponentialRampToValueAtTime(0.0001,audioCtx.currentTime+d);
+    o.connect(gn);gn.connect(audioCtx.destination);
+    o.start();o.stop(audioCtx.currentTime+d+0.02);
+  }catch(e){}
+}
+function finaleSound(){beep(880,.25,'square',.2);setTimeout(()=>beep(660,.25,'square',.2),260);
+  setTimeout(()=>beep(440,.7,'sawtooth',.22),520);}
+
+function fmt(s){s=Math.max(0,Math.ceil(s));const m=Math.floor(s/60),r=s%60;
+  return m+':'+String(r).padStart(2,'0');}
+
+function render(){
+  $('time').textContent=fmt(remaining);
+  $('time').classList.toggle('danger',remaining<=10.4&&remaining>0&&running);
+  bar.style.strokeDashoffset=C*(1-Math.max(0,remaining)/total);
+  bar.style.stroke=(remaining<=10.4&&running)?'#ff5d5d':'#f5c542';
+  $('stateTxt').textContent=finished?'⏰ ВРЕМЯ ВЫШЛО!':(running?'идёт отсчёт...':'пауза / готов');
+}
+function setTotal(s){
+  total=Math.max(1,s);remaining=total;running=false;finished=false;lastTickSec=null;
+  document.body.classList.remove('over');
+  $('btnStart').textContent='▶ СТАРТ';
+  render();
+}
+function toggle(){
+  if(finished){setTotal(total);return;}
+  running=!running;
+  $('btnStart').textContent=running?'⏸ ПАУЗА':'▶ СТАРТ';
+  if(running)beep(740,.08);
+  render();
+}
+function reset(){setTotal(total);}
+
+function loop(now){
+  const dt=Math.min(0.1,(now-rafLast)/1000);rafLast=now;
+  if(running&&!finished){
+    remaining-=dt;
+    const sec=Math.ceil(remaining);
+    if(remaining<=10.2&&remaining>0&&sec!==lastTickSec){lastTickSec=sec;beep(880,.06,'square',.16);}
+    if(remaining<=0){
+      remaining=0;running=false;finished=true;
+      document.body.classList.add('over');
+      finaleSound();
+      $('btnStart').textContent='↺ ЗАНОВО';
+    }
+    render();
+  }
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
+/* пресеты */
+$('presets').addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;
+  document.querySelectorAll('.presets button').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');
+  setTotal(+b.dataset.s);
+});
+$('custom').addEventListener('change',()=>{
+  const v=$('custom').value.trim();
+  let s=0;
+  const m=v.match(/^(\d{1,3}):(\d{1,2})$/);
+  if(m)s=(+m[1])*60+(+m[2]);
+  else if(/^\d+$/.test(v))s=+v;
+  if(s>0){document.querySelectorAll('.presets button').forEach(x=>x.classList.remove('active'));setTotal(s);}
+});
+
+$('btnStart').onclick=toggle;
+$('btnReset').onclick=reset;
+$('btnFs').onclick=toggleFs;
+$('btnSnd').onclick=()=>{sndOn=!sndOn;$('btnSnd').textContent=sndOn?'🔊':'🔇';};
+document.querySelector('.ringWrap').addEventListener('click',toggle);
+function toggleFs(){if(document.fullscreenElement)document.exitFullscreen();
+  else document.documentElement.requestFullscreen().catch(()=>{});}
+addEventListener('keydown',e=>{
+  if(e.code==='Space'){e.preventDefault();toggle();}
+  if(e.key==='r'||e.key==='R'||e.key==='к'||e.key==='К')reset();
+  if(e.key==='f'||e.key==='F'||e.key==='а'||e.key==='А')toggleFs();
+});
+render();
+</script>
+</body>
+</html>

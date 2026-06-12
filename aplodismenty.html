@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Аплодисментометр 👏</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Russo+One&display=swap" rel="stylesheet">
+<style>
+:root{--gold:#f5c542;--bg:#070912;--panel:rgba(15,19,38,.93);--text:#eef1ff;--muted:#8b93b8;--danger:#ff5d5d;--ok:#6ee77a}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:'Russo One',-apple-system,'Segoe UI',Roboto,sans-serif}
+canvas#game{position:fixed;inset:0;display:block;width:100vw;height:100vh}
+.overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(4,6,14,.78);backdrop-filter:blur(8px);z-index:20;padding:16px;overflow:auto}
+.hidden{display:none!important}
+.panel{width:min(560px,94vw);background:var(--panel);border:1px solid rgba(245,197,66,.35);border-radius:20px;padding:24px 28px;box-shadow:0 24px 80px rgba(0,0,0,.65)}
+h1{margin:0 0 4px;font-size:27px;font-weight:400;color:var(--gold);text-align:center;letter-spacing:.5px}
+.sub{text-align:center;color:var(--muted);font-size:13px;margin-bottom:16px;font-family:system-ui}
+.row{display:flex;gap:10px;align-items:center;margin:10px 0}
+button{cursor:pointer;border:0;border-radius:12px;padding:12px 16px;font:inherit;font-size:15px;color:var(--text)}
+.btn-gold{background:linear-gradient(135deg,var(--gold),#d9a520);color:#1a1405;width:100%;font-size:19px;letter-spacing:1px;padding:14px}
+.btn-gold:disabled{filter:grayscale(.8);opacity:.5;cursor:not-allowed}
+.btn-ghost{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.16)}
+select{flex:1;background:#11152a;color:var(--text);border:1px solid rgba(255,255,255,.18);border-radius:10px;padding:10px;font-family:system-ui;font-size:14px;min-width:0}
+textarea{width:100%;background:#11152a;color:var(--text);border:1px solid rgba(255,255,255,.18);border-radius:10px;padding:10px;font-family:system-ui;font-size:14px;resize:vertical}
+label.sl{display:block;margin:10px 0 2px;font-size:13px;color:var(--muted);font-family:system-ui}
+label.sl b{color:var(--text)}
+input[type=range]{width:100%;accent-color:var(--gold)}
+.check{display:flex;gap:8px;align-items:center;font-family:system-ui;font-size:14px;cursor:pointer}
+.meterTrack{height:14px;background:#11152a;border-radius:8px;overflow:hidden;border:1px solid rgba(255,255,255,.12);flex:1}
+#miniFill{height:100%;width:0%;background:linear-gradient(90deg,#6ee77a,#f5c542,#ff5d5d)}
+.status{font-family:system-ui;font-size:12.5px;color:var(--muted);white-space:nowrap}
+.hint{margin-top:14px;text-align:center;font-family:system-ui;font-size:12px;color:var(--muted)}
+.hint a{color:var(--gold);text-decoration:none}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 22px}
+@media(max-width:480px){.grid2{grid-template-columns:1fr}}
+#hud{position:fixed;top:14px;right:14px;display:flex;gap:8px;z-index:15}
+#hud button{padding:9px 13px;font-size:17px;border-radius:10px}
+.home{position:fixed;top:14px;left:14px;z-index:15;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.16);border-radius:10px;padding:9px 13px;color:var(--gold);text-decoration:none;font-size:14px}
+#finalBtns{position:fixed;left:50%;bottom:6vh;transform:translateX(-50%);display:flex;gap:12px;z-index:18}
+#finalBtns button{font-size:17px;padding:13px 22px}
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+<a class="home" href="pult.html">⌂ ПУЛЬТ</a>
+<div id="hud" class="hidden">
+  <button class="btn-ghost" id="btnFs" title="Весь экран (F)">⛶</button>
+  <button class="btn-ghost" id="btnMenu" title="Меню (Esc)">⚙</button>
+</div>
+
+<div id="menu" class="overlay">
+  <div class="panel">
+    <h1>👏 АПЛОДИСМЕНТОМЕТР</h1>
+    <div class="sub">батл столов и команд — кто громче, тот победил</div>
+    <div class="row">
+      <button class="btn-ghost" id="btnMic" style="flex:1">🎙 Включить микрофон</button>
+      <button class="btn-ghost" id="btnRefresh" title="Обновить список">↻</button>
+    </div>
+    <div class="row"><select id="micSel" disabled><option>— сначала включите микрофон —</option></select></div>
+    <div class="row">
+      <div class="meterTrack"><div id="miniFill"></div></div>
+      <span class="status" id="dbTxt" style="min-width:62px;text-align:right">— дБ</span>
+    </div>
+    <div class="row">
+      <button class="btn-ghost" id="btnCal" style="flex:1">📏 Калибровка фона зала (1,5 сек)</button>
+      <span class="status" id="calTxt">фон: −52 дБ</span>
+    </div>
+    <label class="sl">Команды (каждая с новой строки):</label>
+    <textarea id="teams" rows="3">СТОЛ 1
+СТОЛ 2</textarea>
+    <div class="grid2">
+      <div>
+        <label class="sl">Время замера: <b id="vDur">5 сек</b></label>
+        <input type="range" id="dur" min="3" max="10" value="5">
+      </div>
+      <div>
+        <label class="sl">Чувствительность: <b id="vSens">40 дБ</b></label>
+        <input type="range" id="sens" min="25" max="60" value="40">
+      </div>
+    </div>
+    <div class="row" style="margin-top:6px">
+      <label class="check"><input type="checkbox" id="snd" checked> Звуки и фанфары</label>
+    </div>
+    <button class="btn-gold" id="btnStart" disabled style="margin-top:14px">▶ НАЧАТЬ БАТЛ</button>
+    <div class="hint">Space / тап — дальше • F — весь экран • Esc — меню • <a href="pult.html">⌂ пульт</a></div>
+  </div>
+</div>
+
+<div id="finalBtns" class="hidden">
+  <button class="btn-gold" id="btnAgain" style="width:auto">🔁 ЕЩЁ РАЗ</button>
+  <button class="btn-ghost" id="btnToMenu">⚙ Меню</button>
+</div>
+
+<script>
+"use strict";
+/* ===== canvas ===== */
+const cv=document.getElementById('game'),cx=cv.getContext('2d');
+let W=0,H=0,DPR=1;
+function resize(){DPR=Math.min(2,window.devicePixelRatio||1);W=innerWidth;H=innerHeight;
+  cv.width=W*DPR;cv.height=H*DPR;cv.style.width=W+'px';cv.style.height=H+'px';
+  cx.setTransform(DPR,0,0,DPR,0,0);}
+addEventListener('resize',()=>{resize();makeStars();});resize();
+
+const $=id=>document.getElementById(id);
+const menuEl=$('menu'),hudEl=$('hud'),finalBtns=$('finalBtns');
+const micSel=$('micSel'),miniFill=$('miniFill'),dbTxt=$('dbTxt'),calTxt=$('calTxt');
+
+/* ===== параметры ===== */
+const P={dur:5,sens:40,snd:true};
+$('dur').oninput=e=>{P.dur=+e.target.value;$('vDur').textContent=P.dur+' сек';};
+$('sens').oninput=e=>{P.sens=+e.target.value;$('vSens').textContent=P.sens+' дБ';};
+$('snd').onchange=e=>P.snd=e.target.checked;
+
+/* ===== аудио ===== */
+let audioCtx=null,analyser=null,srcNode=null,micStream=null,buf=null,micOn=false;
+let db=-90,level=0,levelSm=0,noiseFloor=-52,calArr=null,calUntil=0;
+
+async function startMic(deviceId){
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
+    alert('Браузер не даёт доступ к микрофону с локального файла.\nОткрой в Chrome или по https (GitHub Pages).');return;}
+  try{
+    if(micStream)micStream.getTracks().forEach(t=>t.stop());
+    if(srcNode){try{srcNode.disconnect()}catch(e){}}
+    const cs={audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}};
+    if(deviceId)cs.audio.deviceId={exact:deviceId};
+    micStream=await navigator.mediaDevices.getUserMedia(cs);
+    audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)();
+    if(audioCtx.state==='suspended')await audioCtx.resume();
+    srcNode=audioCtx.createMediaStreamSource(micStream);
+    analyser=audioCtx.createAnalyser();analyser.fftSize=2048;
+    srcNode.connect(analyser);buf=new Float32Array(analyser.fftSize);
+    micOn=true;setMicStatus('🎙 Микрофон работает',true);$('btnStart').disabled=false;
+    await fillDevices();
+  }catch(err){
+    micOn=false;setMicStatus('⛔ Нет доступа к микрофону',false);
+    alert('Не удалось включить микрофон.\n1) Разреши в браузере (значок 🎤)\n2) Настройки системы → Конфиденциальность → Микрофон\n3) Надёжнее всего — открыть по https');
+  }
+}
+function setMicStatus(t,ok){const b=$('btnMic');b.textContent=t;b.style.borderColor=ok?'rgba(110,231,122,.6)':'rgba(255,93,93,.6)';}
+async function fillDevices(){
+  try{
+    const devs=await navigator.mediaDevices.enumerateDevices();
+    const ins=devs.filter(d=>d.kind==='audioinput');
+    micSel.innerHTML='';
+    ins.forEach((d,i)=>{const o=document.createElement('option');o.value=d.deviceId;o.textContent=d.label||('Микрофон '+(i+1));micSel.appendChild(o);});
+    micSel.disabled=false;
+    if(micStream){const tId=micStream.getAudioTracks()[0].getSettings().deviceId;if(tId)micSel.value=tId;}
+  }catch(e){}
+}
+micSel.onchange=()=>startMic(micSel.value);
+$('btnMic').onclick=()=>startMic(micSel.disabled?undefined:(micSel.value||undefined));
+$('btnRefresh').onclick=fillDevices;
+$('btnCal').onclick=()=>{if(!micOn){calTxt.textContent='сначала микрофон';return;}
+  calArr=[];calUntil=performance.now()+1500;calTxt.textContent='⏳ тихо в зале...';};
+
+function meter(dt){
+  if(!analyser)return;
+  analyser.getFloatTimeDomainData(buf);
+  let s=0;for(let i=0;i<buf.length;i++){const v=buf[i];s+=v*v;}
+  db=20*Math.log10(Math.sqrt(s/buf.length)+1e-8);
+  const minDb=noiseFloor+6;
+  level=Math.min(1,Math.max(0,(db-minDb)/P.sens));
+  const a=1-Math.pow(1-0.35,dt*60);
+  levelSm+=(level-levelSm)*a;
+  const now=performance.now();
+  if(calArr){if(now<calUntil){calArr.push(db);}
+    else{if(calArr.length)noiseFloor=calArr.reduce((x,y)=>x+y,0)/calArr.length;
+      calTxt.textContent='фон: '+noiseFloor.toFixed(0)+' дБ ✓';calArr=null;}}
+  if(state==='menu'){miniFill.style.width=(levelSm*100).toFixed(1)+'%';
+    dbTxt.textContent=db<=-89?'— дБ':db.toFixed(0)+' дБ';}
+}
+function beep(f,d,type,g){
+  if(!P.snd||!audioCtx)return;
+  try{const o=audioCtx.createOscillator(),gn=audioCtx.createGain();
+    o.type=type||'sine';o.frequency.value=f;
+    gn.gain.setValueAtTime(g||0.14,audioCtx.currentTime);
+    gn.gain.exponentialRampToValueAtTime(0.0001,audioCtx.currentTime+d);
+    o.connect(gn);gn.connect(audioCtx.destination);
+    o.start();o.stop(audioCtx.currentTime+d+0.02);}catch(e){}
+}
+function fanfare(){[523,659,784,1047].forEach((f,i)=>setTimeout(()=>beep(f,.2,'triangle',.2),i*150));}
+
+/* ===== игра ===== */
+let state='menu'; // menu|intro|count|measure|result|final
+let teams=[],cur=0,countT=0,measT=0,resultT=0,t=0;
+let stars=[],confetti=[];
+function makeStars(){stars=Array.from({length:130},()=>({x:Math.random()*W,y:Math.random()*H,z:.3+Math.random(),r:.4+Math.random()*1.5}));}
+makeStars();
+
+function liveScore(samples){
+  if(!samples.length)return 0;
+  const sorted=samples.slice().sort((a,b)=>b-a);
+  const n=Math.max(1,Math.floor(sorted.length*0.3));
+  let s=0;for(let i=0;i<n;i++)s+=sorted[i];
+  return Math.round((s/n)*100);
+}
+function startBattle(){
+  const names=$('teams').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  if(names.length<2){alert('Нужно минимум 2 команды (каждая с новой строки)');return;}
+  teams=names.map(n=>({name:n.slice(0,18),samples:[],score:0,disp:0,peak:0}));
+  cur=0;confetti=[];
+  state='intro';
+  menuEl.classList.add('hidden');hudEl.classList.remove('hidden');finalBtns.classList.add('hidden');
+}
+function goMenu(){state='menu';menuEl.classList.remove('hidden');hudEl.classList.add('hidden');finalBtns.classList.add('hidden');}
+function advance(){
+  if(state==='intro'){state='count';countT=3;beep(440,.1);}
+  else if(state==='result'){nextTeam();}
+}
+function nextTeam(){
+  cur++;
+  if(cur>=teams.length){
+    state='final';
+    teams.forEach(tm=>tm.disp=0);
+    finalBtns.classList.remove('hidden');
+    fanfare();spawnConfetti(180);
+  } else state='intro';
+}
+function spawnConfetti(n){
+  const colors=['#f5c542','#ffd76a','#ff5d7a','#6ee77a','#7aa6ff','#fff'];
+  for(let i=0;i<n;i++)confetti.push({
+    x:Math.random()*W,y:-20-Math.random()*H*0.3,
+    vx:(Math.random()-.5)*120,vy:80+Math.random()*160,
+    rot:Math.random()*6.28,vr:(Math.random()-.5)*8,
+    w:6+Math.random()*6,h:8+Math.random()*8,
+    color:colors[(Math.random()*colors.length)|0],life:4+Math.random()*3});
+}
+
+function update(dt){
+  t+=dt;meter(dt);
+  for(const s of stars){s.x-=s.z*16*dt;if(s.x<-3){s.x=W+3;s.y=Math.random()*H;}}
+  for(const c of confetti){c.x+=c.vx*dt;c.y+=c.vy*dt;c.vy+=220*dt;c.rot+=c.vr*dt;c.life-=dt;}
+  confetti=confetti.filter(c=>c.life>0&&c.y<H+40);
+
+  if(state==='count'){
+    countT-=dt;
+    if(countT<=0){state='measure';measT=P.dur;teams[cur].samples=[];teams[cur].peak=0;beep(880,.12);}
+  }
+  else if(state==='measure'){
+    measT-=dt;
+    const tm=teams[cur];
+    tm.samples.push(level);
+    if(level>tm.peak)tm.peak=level;
+    tm.score=liveScore(tm.samples);
+    if(measT<=0){state='result';resultT=2.2;beep(660,.15,'triangle',.18);}
+  }
+  else if(state==='result'){
+    resultT-=dt;
+    if(resultT<=0)nextTeam();
+  }
+  else if(state==='final'){
+    for(const tm of teams)tm.disp+=(tm.score-tm.disp)*(1-Math.pow(0.85,dt*60));
+  }
+}
+
+/* ===== рисование ===== */
+function draw(){
+  const g=cx.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,'#0d1124');g.addColorStop(1,'#070912');
+  cx.fillStyle=g;cx.fillRect(0,0,W,H);
+  for(const s of stars){cx.globalAlpha=.18+.45*(s.z-.3);cx.fillStyle='#fff';
+    cx.beginPath();cx.arc(s.x,s.y,s.r,0,Math.PI*2);cx.fill();}
+  cx.globalAlpha=1;
+  if(state==='menu')return;
+  cx.textAlign='center';
+
+  if(state==='intro'){
+    const tm=teams[cur];
+    cx.fillStyle='rgba(255,255,255,.6)';cx.font='22px "Russo One",system-ui';
+    cx.fillText('ГОТОВИТСЯ:',W/2,H*0.32);
+    cx.fillStyle='#f5c542';cx.font=fit(tm.name,64)+'px "Russo One",system-ui';
+    cx.shadowColor='rgba(245,197,66,.6)';cx.shadowBlur=24;
+    cx.fillText(tm.name,W/2,H*0.46);cx.shadowBlur=0;
+    cx.fillStyle='#fff';cx.font='20px system-ui';
+    cx.fillText('Аплодисменты и крики по команде! 👏',W/2,H*0.58);
+    pulseHint('Space / тап — поехали',H*0.7);
+  }
+  else if(state==='count'){
+    cx.fillStyle='#f5c542';cx.font='150px "Russo One",system-ui';
+    cx.shadowColor='rgba(245,197,66,.7)';cx.shadowBlur=34;
+    cx.fillText(Math.max(1,Math.ceil(countT)),W/2,H*0.55);cx.shadowBlur=0;
+  }
+  else if(state==='measure'||state==='result'){
+    const tm=teams[cur];
+    cx.fillStyle='rgba(255,255,255,.6)';cx.font='24px "Russo One",system-ui';
+    cx.fillText(tm.name,W/2,H*0.2);
+    const sc=tm.score;
+    cx.fillStyle=state==='result'?'#6ee77a':'#fff';
+    cx.font=Math.min(190,W*0.22)+'px "Russo One",system-ui';
+    cx.shadowColor='rgba(245,197,66,.45)';cx.shadowBlur=26;
+    cx.fillText(sc,W/2,H*0.52);cx.shadowBlur=0;
+    // живая полоса громкости
+    const bw=W*0.7,bh=26,bx=(W-bw)/2,by=H*0.66;
+    cx.fillStyle='rgba(255,255,255,.08)';rRect(bx,by,bw,bh,13);cx.fill();
+    const gr=cx.createLinearGradient(bx,0,bx+bw,0);
+    gr.addColorStop(0,'#6ee77a');gr.addColorStop(.6,'#f5c542');gr.addColorStop(1,'#ff5d5d');
+    cx.save();rRect(bx,by,bw,bh,13);cx.clip();
+    cx.fillStyle=gr;cx.fillRect(bx,by,bw*levelSm,bh);cx.restore();
+    // маркер пика
+    cx.fillStyle='#fff';cx.fillRect(bx+bw*teams[cur].peak-2,by-5,4,bh+10);
+    if(state==='measure'){
+      cx.fillStyle='rgba(255,255,255,.55)';cx.font='18px system-ui';
+      cx.fillText('осталось: '+measT.toFixed(1)+' с',W/2,by+bh+34);
+      cx.fillStyle='#f5c542';cx.font='26px "Russo One",system-ui';
+      cx.fillText('ГРОМЧЕ!!! 👏🔥',W/2,H*0.13);
+    } else {
+      cx.fillStyle='rgba(255,255,255,.55)';cx.font='18px system-ui';
+      cx.fillText(cur<teams.length-1?'следующие: '+teams[cur+1].name:'считаем итоги...',W/2,by+bh+34);
+    }
+  }
+  else if(state==='final'){
+    cx.fillStyle='#f5c542';cx.font='34px "Russo One",system-ui';
+    cx.fillText('🏆 РЕЗУЛЬТАТЫ',W/2,H*0.13);
+    const best=Math.max(...teams.map(x=>x.score));
+    const rows=teams.length,rh=Math.min(72,(H*0.55)/rows);
+    const chartW=W*0.62,x0=W*0.26,y0=H*0.22;
+    teams.forEach((tm,i)=>{
+      const y=y0+i*rh,winner=tm.score===best;
+      cx.textAlign='right';
+      cx.fillStyle=winner?'#f5c542':'rgba(255,255,255,.8)';
+      cx.font=(winner?22:18)+'px "Russo One",system-ui';
+      cx.fillText((winner?'👑 ':'')+tm.name,x0-14,y+rh*0.55);
+      cx.fillStyle='rgba(255,255,255,.07)';
+      rRect(x0,y+rh*0.18,chartW,rh*0.55,10);cx.fill();
+      cx.fillStyle=winner?'#f5c542':'#39437a';
+      if(winner){cx.shadowColor='rgba(245,197,66,.6)';cx.shadowBlur=18;}
+      rRect(x0,y+rh*0.18,Math.max(8,chartW*(tm.disp/100)),rh*0.55,10);cx.fill();
+      cx.shadowBlur=0;
+      cx.textAlign='left';
+      cx.fillStyle='#fff';cx.font='20px "Russo One",system-ui';
+      cx.fillText(Math.round(tm.disp),x0+chartW*(tm.disp/100)+12,y+rh*0.56);
+    });
+    cx.textAlign='center';
+  }
+  // конфетти
+  for(const c of confetti){
+    cx.save();cx.translate(c.x,c.y);cx.rotate(c.rot);
+    cx.globalAlpha=Math.min(1,c.life);
+    cx.fillStyle=c.color;cx.fillRect(-c.w/2,-c.h/2,c.w,c.h);
+    cx.restore();
+  }
+  cx.globalAlpha=1;
+}
+function fit(text,base){return Math.min(base,(W*0.9)/(text.length*0.62));}
+function pulseHint(txt,y){
+  cx.globalAlpha=.55+.35*Math.sin(t*4);
+  cx.fillStyle='#fff';cx.font='17px system-ui';
+  cx.fillText(txt,W/2,y);cx.globalAlpha=1;
+}
+function rRect(x,y,w,h,r){cx.beginPath();cx.moveTo(x+r,y);cx.arcTo(x+w,y,x+w,y+h,r);
+  cx.arcTo(x+w,y+h,x,y+h,r);cx.arcTo(x,y+h,x,y,r);cx.arcTo(x,y,x+w,y,r);cx.closePath();}
+
+/* ===== управление ===== */
+$('btnStart').onclick=()=>{if(micOn)startBattle();};
+$('btnAgain').onclick=()=>{teams.forEach(tm=>{tm.samples=[];tm.score=0;tm.disp=0;tm.peak=0;});cur=0;confetti=[];state='intro';finalBtns.classList.add('hidden');};
+$('btnToMenu').onclick=goMenu;
+$('btnMenu').onclick=goMenu;
+$('btnFs').onclick=toggleFs;
+function toggleFs(){if(document.fullscreenElement)document.exitFullscreen();
+  else document.documentElement.requestFullscreen().catch(()=>{});}
+addEventListener('keydown',e=>{
+  if(e.code==='Space'){e.preventDefault();
+    if(state==='final'){$('btnAgain').click();}else advance();}
+  if(e.key==='f'||e.key==='F'||e.key==='а'||e.key==='А')toggleFs();
+  if(e.key==='Escape'&&state!=='menu')goMenu();
+});
+cv.addEventListener('click',()=>advance());
+
+/* ===== цикл ===== */
+let last=performance.now();
+function loop(now){const dt=Math.min(0.05,(now-last)/1000)||0.016;last=now;
+  update(dt);draw();requestAnimationFrame(loop);}
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
