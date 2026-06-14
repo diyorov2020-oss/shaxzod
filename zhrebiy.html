@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Жеребьёвка команд 🎲</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Russo+One&display=swap" rel="stylesheet">
+<style>
+:root{--gold:#f5c542;--bg:#070912;--panel:rgba(15,19,38,.95);--text:#eef1ff;--muted:#8b93b8}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:radial-gradient(1100px 500px at 50% -10%,rgba(245,197,66,.08),transparent 60%),var(--bg);color:var(--text);font-family:'Russo One',-apple-system,'Segoe UI',Roboto,sans-serif;overflow-x:hidden}
+.hidden{display:none!important}
+button{cursor:pointer;border:0;border-radius:12px;padding:12px 16px;font:inherit;font-size:15px;color:var(--text)}
+.btn-gold{background:linear-gradient(135deg,var(--gold),#d9a520);color:#1a1405;font-size:17px;letter-spacing:.5px}
+.btn-ghost{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.16)}
+#hud{position:fixed;top:14px;right:14px;display:flex;gap:8px;z-index:15}
+#hud button{padding:9px 13px;font-size:17px;border-radius:10px}
+.home{position:fixed;top:14px;left:14px;z-index:15;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.16);border-radius:10px;padding:9px 13px;color:var(--gold);text-decoration:none;font-size:14px}
+
+.wrap{max-width:1200px;margin:0 auto;padding:70px 20px 40px;text-align:center}
+h1{color:var(--gold);font-weight:400;font-size:clamp(24px,4vw,38px);margin:0 0 6px;letter-spacing:1px}
+.tagline{color:var(--muted);font-family:system-ui;font-size:14px;margin-bottom:24px}
+
+.controls{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:30px}
+
+#teamsGrid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));align-items:start}
+.team{background:linear-gradient(160deg,#141a33,#0e1326);border:1px solid rgba(245,197,66,.3);border-radius:18px;padding:0 0 14px;overflow:hidden;opacity:0;transform:translateY(20px) scale(.96);animation:rise .5s forwards}
+.team h2{background:linear-gradient(135deg,var(--gold),#d9a520);color:#1a1405;margin:0;padding:12px;font-weight:400;font-size:18px;letter-spacing:.5px}
+.team ul{list-style:none;margin:0;padding:8px 10px;font-family:system-ui;font-size:16px}
+.team li{padding:9px 12px;margin:5px 0;background:rgba(255,255,255,.05);border-radius:9px;opacity:0;animation:fadein .4s forwards}
+.team .cnt{font-family:system-ui;font-size:12px;color:var(--muted);padding:4px 12px 0}
+@keyframes rise{to{opacity:1;transform:none}}
+@keyframes fadein{to{opacity:1}}
+
+/* барабан */
+#drum{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;background:rgba(4,6,14,.92);backdrop-filter:blur(8px);z-index:30}
+#drumName{font-size:clamp(34px,8vw,84px);color:var(--gold);text-shadow:0 0 40px rgba(245,197,66,.5);min-height:1.2em;padding:0 20px;text-align:center;word-break:break-word}
+#drumLabel{color:var(--muted);font-family:system-ui;font-size:18px;margin-top:20px;letter-spacing:2px}
+
+/* редактор */
+#editor{position:fixed;top:0;right:0;height:100%;width:min(360px,94vw);background:var(--panel);border-left:1px solid rgba(245,197,66,.35);padding:22px;z-index:40;overflow:auto;backdrop-filter:blur(8px)}
+#editor h2{font-weight:400;color:var(--gold);font-size:19px;margin:0 0 4px}
+#editor p{font-family:system-ui;font-size:12.5px;color:var(--muted);margin:0 0 12px}
+label.sl{display:block;margin:14px 0 6px;font-size:13px;color:var(--muted);font-family:system-ui}
+label.sl b{color:var(--text)}
+textarea{width:100%;background:#11152a;color:var(--text);border:1px solid rgba(255,255,255,.18);border-radius:10px;padding:10px;font-family:system-ui;font-size:14px;resize:vertical}
+input[type=range]{width:100%;accent-color:var(--gold)}
+.check{display:flex;gap:8px;align-items:center;font-family:system-ui;font-size:14px;cursor:pointer;margin:14px 0}
+#editor .btn-gold{width:100%;margin-top:10px}
+.empty{color:var(--muted);font-family:system-ui;font-size:16px;padding:40px 0}
+</style>
+</head>
+<body>
+<a class="home" href="pult.html">⌂ ПУЛЬТ</a>
+<div id="hud">
+  <button class="btn-ghost" id="btnSnd" title="Звуки">🔊</button>
+  <button class="btn-ghost" id="btnFs" title="Весь экран (F)">⛶</button>
+  <button class="btn-ghost" id="btnEdit" title="Список (E)">⚙</button>
+</div>
+
+<div class="wrap">
+  <h1>🎲 ЖЕРЕБЬЁВКА КОМАНД</h1>
+  <div class="tagline">список гостей честно делится на команды — нажми «Жеребьёвка»</div>
+  <div class="controls">
+    <button class="btn-gold" id="btnRoll">🎲 ЖЕРЕБЬЁВКА</button>
+    <button class="btn-ghost" id="btnEdit2">✏️ Список и команды</button>
+  </div>
+  <div id="teamsGrid"></div>
+  <div class="empty" id="emptyHint">Нажми «Жеребьёвка» — и гости разделятся на команды ✨</div>
+</div>
+
+<div id="drum" class="hidden">
+  <div id="drumName">—</div>
+  <div id="drumLabel">ПЕРЕМЕШИВАЕМ...</div>
+</div>
+
+<div id="editor" class="hidden">
+  <h2>⚙ Список гостей</h2>
+  <p>Каждое имя с новой строки.</p>
+  <textarea id="names" rows="12">Азиз
+Дилноза
+Бекзод
+Малика
+Сардор
+Нигора
+Жасур
+Камила
+Тимур
+Феруза
+Шерзод
+Зухра</textarea>
+  <label class="sl">Сколько команд: <b id="vN">2</b></label>
+  <input type="range" id="nTeams" min="2" max="6" value="2">
+  <label class="check"><input type="checkbox" id="customNames"> Свои названия команд</label>
+  <textarea id="teamNames" rows="3" class="hidden" placeholder="Красные&#10;Синие&#10;Зелёные"></textarea>
+  <button class="btn-gold" id="btnApply">✓ ГОТОВО</button>
+</div>
+
+<script>
+"use strict";
+const $=id=>document.getElementById(id);
+let names=['Азиз','Дилноза','Бекзод','Малика','Сардор','Нигора','Жасур','Камила','Тимур','Феруза','Шерзод','Зухра'];
+let nTeams=2,sndOn=true,customNames=false,teamNames=[];
+
+/* ===== звук ===== */
+let audioCtx=null;
+function beep(f,d,type,g){
+  if(!sndOn)return;
+  try{audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)();
+    if(audioCtx.state==='suspended')audioCtx.resume();
+    const o=audioCtx.createOscillator(),gn=audioCtx.createGain();
+    o.type=type||'sine';o.frequency.value=f;
+    gn.gain.setValueAtTime(g||0.1,audioCtx.currentTime);
+    gn.gain.exponentialRampToValueAtTime(0.0001,audioCtx.currentTime+d);
+    o.connect(gn);gn.connect(audioCtx.destination);
+    o.start();o.stop(audioCtx.currentTime+d+0.02);}catch(e){}
+}
+function fanfare(){[523,659,784,1047].forEach((f,i)=>setTimeout(()=>beep(f,.2,'triangle',.18),i*140));}
+
+/* ===== логика ===== */
+function shuffle(a){const r=a.slice();for(let i=r.length-1;i>0;i--){const j=(Math.random()*(i+1))|0;[r[i],r[j]]=[r[j],r[i]];}return r;}
+
+function distribute(){
+  const valid=names.filter(Boolean);
+  if(valid.length<nTeams){alert('Гостей меньше, чем команд. Добавь имена или уменьши число команд.');return null;}
+  const sh=shuffle(valid);
+  const buckets=Array.from({length:nTeams},()=>[]);
+  sh.forEach((name,i)=>buckets[i%nTeams].push(name));
+  return buckets;
+}
+
+let rolling=false;
+function roll(){
+  if(rolling)return;
+  const buckets=distribute();
+  if(!buckets)return;
+  rolling=true;
+  $('emptyHint').classList.add('hidden');
+  $('teamsGrid').innerHTML='';
+  // барабан
+  const drum=$('drum'),dn=$('drumName');
+  drum.classList.remove('hidden');
+  const pool=names.filter(Boolean);
+  let ticks=0;const total=26;
+  let delay=45;
+  function tick(){
+    dn.textContent=pool[(Math.random()*pool.length)|0];
+    beep(420+Math.random()*240,.03,'square',.05);
+    ticks++;
+    if(ticks<total){delay*=1.07;setTimeout(tick,delay);}
+    else{drum.classList.add('hidden');reveal(buckets);}
+  }
+  tick();
+}
+
+function teamTitle(i){
+  if(customNames && teamNames[i]) return teamNames[i];
+  return 'Команда '+(i+1);
+}
+
+function reveal(buckets){
+  const grid=$('teamsGrid');grid.innerHTML='';
+  buckets.forEach((members,ti)=>{
+    const card=document.createElement('div');
+    card.className='team';card.style.animationDelay=(ti*0.18)+'s';
+    let lis='';
+    members.forEach((m,mi)=>{lis+='<li style="animation-delay:'+(ti*0.18+0.3+mi*0.1)+'s">'+esc(m)+'</li>';});
+    card.innerHTML='<h2>'+esc(teamTitle(ti))+'</h2><ul>'+lis+'</ul><div class="cnt">'+members.length+' чел.</div>';
+    grid.appendChild(card);
+  });
+  const totalDelay=buckets.length*0.18+0.3+Math.max(...buckets.map(b=>b.length))*0.1;
+  setTimeout(()=>{fanfare();rolling=false;},totalDelay*1000);
+}
+function esc(s){return String(s).replace(/[<>&]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]));}
+
+/* ===== редактор ===== */
+function applyEditor(){
+  names=$('names').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  nTeams=+$('nTeams').value;
+  customNames=$('customNames').checked;
+  teamNames=$('teamNames').value.split('\n').map(s=>s.trim());
+  if(names.length<2){alert('Добавь хотя бы 2 имени');return;}
+  $('editor').classList.add('hidden');
+}
+$('nTeams').oninput=e=>$('vN').textContent=e.target.value;
+$('customNames').onchange=e=>$('teamNames').classList.toggle('hidden',!e.target.checked);
+
+/* ===== управление ===== */
+$('btnRoll').onclick=roll;
+$('btnApply').onclick=applyEditor;
+const toggleEd=()=>$('editor').classList.toggle('hidden');
+$('btnEdit').onclick=toggleEd;
+$('btnEdit2').onclick=toggleEd;
+$('btnSnd').onclick=()=>{sndOn=!sndOn;$('btnSnd').textContent=sndOn?'🔊':'🔇';};
+$('btnFs').onclick=toggleFs;
+function toggleFs(){if(document.fullscreenElement)document.exitFullscreen();
+  else document.documentElement.requestFullscreen().catch(()=>{});}
+addEventListener('keydown',e=>{
+  if(e.code==='Space'){e.preventDefault();roll();}
+  if(e.key==='f'||e.key==='F'||e.key==='а'||e.key==='А')toggleFs();
+  if(e.key==='e'||e.key==='E'||e.key==='у'||e.key==='У')toggleEd();
+  if(e.code==='Escape')$('editor').classList.add('hidden');
+});
+</script>
+</body>
+</html>

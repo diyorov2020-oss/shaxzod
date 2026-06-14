@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Миллионер 💰</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Russo+One&display=swap" rel="stylesheet">
+<style>
+:root{--gold:#f5c542;--bg:#070912;--panel:rgba(15,19,38,.96);--text:#eef1ff;--muted:#8b93b8;--green:#4ad96b;--red:#ff5d5d;--blue:#1b2552}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:radial-gradient(1200px 600px at 50% -10%,rgba(245,197,66,.1),transparent 55%),#05070f;color:var(--text);font-family:'Russo One',-apple-system,'Segoe UI',Roboto,sans-serif;overflow-x:hidden}
+.hidden{display:none!important}
+button{cursor:pointer;border:0;border-radius:12px;padding:12px 16px;font:inherit;font-size:15px;color:var(--text)}
+.btn-gold{background:linear-gradient(135deg,var(--gold),#d9a520);color:#1a1405;font-size:16px;letter-spacing:.5px}
+.btn-ghost{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.16)}
+#hud{position:fixed;top:14px;right:14px;display:flex;gap:8px;z-index:15}
+#hud button{padding:9px 13px;font-size:17px;border-radius:10px}
+.home{position:fixed;top:14px;left:14px;z-index:15;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.16);border-radius:10px;padding:9px 13px;color:var(--gold);text-decoration:none;font-size:14px}
+
+.layout{max-width:1180px;margin:0 auto;padding:60px 18px 30px;display:grid;grid-template-columns:1fr 230px;gap:24px}
+@media(max-width:820px){.layout{grid-template-columns:1fr}.ladder{order:-1}}
+
+.main{display:flex;flex-direction:column;min-height:78vh}
+.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-family:system-ui}
+.qnum{color:var(--muted);font-size:14px}
+.score{color:var(--gold);font-size:15px}
+.lifelines{display:flex;gap:10px;justify-content:center;margin:8px 0 18px}
+.lifelines button{width:64px;height:50px;border-radius:14px;background:rgba(27,37,82,.8);border:1px solid rgba(245,197,66,.4);font-size:13px;font-family:system-ui;color:var(--text);position:relative;padding:0}
+.lifelines button.used{opacity:.3;text-decoration:line-through;cursor:not-allowed}
+.lifelines button small{display:block;font-size:10px;color:var(--muted)}
+
+.qbox{flex:1;display:flex;align-items:center;justify-content:center;text-align:center;padding:20px;background:linear-gradient(160deg,rgba(27,37,82,.5),rgba(13,18,38,.5));border:1px solid rgba(245,197,66,.25);border-radius:20px;margin-bottom:18px}
+.qtext{font-size:clamp(20px,3.2vw,32px);line-height:1.4;font-weight:400}
+
+.answers{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:560px){.answers{grid-template-columns:1fr}}
+.ans{display:flex;align-items:center;gap:12px;padding:16px 18px;background:linear-gradient(135deg,var(--blue),#0e1430);border:2px solid rgba(245,197,66,.35);border-radius:14px;cursor:pointer;text-align:left;font-size:clamp(15px,2vw,19px);transition:transform .12s,border-color .2s,background .2s;min-height:62px}
+.ans:hover:not(.disabled){transform:translateY(-2px);border-color:var(--gold)}
+.ans .let{color:var(--gold);font-size:20px;min-width:24px}
+.ans.sel{background:linear-gradient(135deg,#c8920f,#a87a0d);border-color:#fff;color:#fff}
+.ans.sel .let{color:#fff}
+.ans.correct{background:linear-gradient(135deg,#2faa4f,#1f7d39);border-color:#9dffb4;color:#fff;animation:flash .5s}
+.ans.correct .let{color:#fff}
+.ans.wrong{background:linear-gradient(135deg,#c0392b,#962d22);border-color:#ffb3ab;color:#fff}
+.ans.wrong .let{color:#fff}
+.ans.gone{opacity:.18;pointer-events:none}
+.ans.disabled{cursor:default}
+@keyframes flash{0%,100%{filter:brightness(1)}50%{filter:brightness(1.5)}}
+
+.controls{display:flex;gap:10px;justify-content:center;margin-top:18px;flex-wrap:wrap}
+
+/* лесенка */
+.ladder{background:linear-gradient(160deg,#10162e,#0a0e20);border:1px solid rgba(245,197,66,.25);border-radius:18px;padding:14px;font-family:system-ui;align-self:start}
+.ladder .step{display:flex;justify-content:space-between;padding:8px 12px;border-radius:8px;font-size:14px;color:var(--muted);margin:2px 0}
+.ladder .step .n{opacity:.6}
+.ladder .step.safe{color:#fff}
+.ladder .step.cur{background:var(--gold);color:#1a1405;font-weight:700}
+.ladder .step.cur .n{opacity:.8;color:#1a1405}
+.ladder .step.done{color:var(--green)}
+
+/* модалки */
+.modal{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(4,6,14,.85);backdrop-filter:blur(8px);z-index:40;padding:16px}
+.modalCard{width:min(520px,94vw);background:var(--panel);border:1px solid rgba(245,197,66,.4);border-radius:20px;padding:26px 28px;box-shadow:0 24px 80px rgba(0,0,0,.7)}
+.modalCard h2{color:var(--gold);font-weight:400;font-size:22px;margin:0 0 14px;text-align:center}
+.bars{display:flex;gap:10px;align-items:flex-end;height:180px;justify-content:center;margin:10px 0}
+.bar{width:56px;background:linear-gradient(180deg,var(--gold),#d9a520);border-radius:8px 8px 0 0;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;color:#1a1405;font-family:system-ui;font-weight:700;transition:height .8s ease;position:relative}
+.bar span{position:absolute;top:-22px;color:var(--text);font-size:13px}
+.bar .lb{padding-bottom:6px;font-size:15px}
+.friendText{font-family:system-ui;font-size:17px;line-height:1.5;text-align:center;color:var(--text)}
+.modalCard .btn-gold{width:100%;margin-top:18px}
+textarea{width:100%;background:#11152a;color:var(--text);border:1px solid rgba(255,255,255,.18);border-radius:10px;padding:12px;font-family:ui-monospace,monospace;font-size:13px;resize:vertical;line-height:1.5}
+.edHelp{font-family:system-ui;font-size:12.5px;color:var(--muted);margin:0 0 12px;line-height:1.5}
+.bigWin{text-align:center}
+.bigWin .amt{font-size:clamp(40px,8vw,72px);color:var(--gold);text-shadow:0 0 40px rgba(245,197,66,.5);margin:10px 0}
+</style>
+</head>
+<body>
+<a class="home" href="pult.html">⌂ ПУЛЬТ</a>
+<div id="hud">
+  <button class="btn-ghost" id="btnSnd" title="Звуки">🔊</button>
+  <button class="btn-ghost" id="btnEdit" title="Вопросы">✏️</button>
+  <button class="btn-ghost" id="btnFs" title="Весь экран (F)">⛶</button>
+</div>
+
+<div class="layout">
+  <div class="main">
+    <div class="topbar">
+      <span class="qnum" id="qnum">Вопрос 1</span>
+      <span class="score" id="score">Угадано: 0</span>
+    </div>
+    <div class="lifelines">
+      <button id="ll5050">50:50<small>убрать 2</small></button>
+      <button id="llHall">Зал<small>голоса</small></button>
+      <button id="llFriend">Звонок<small>другу</small></button>
+    </div>
+    <div class="qbox"><div class="qtext" id="qtext">—</div></div>
+    <div class="answers" id="answers"></div>
+    <div class="controls">
+      <button class="btn-gold" id="btnLock" disabled>✓ ОТВЕТ</button>
+      <button class="btn-ghost" id="btnNext" class="hidden">Дальше →</button>
+    </div>
+  </div>
+
+  <div class="ladder" id="ladder"></div>
+</div>
+
+<!-- модалка зала -->
+<div id="hallModal" class="modal hidden">
+  <div class="modalCard">
+    <h2>📊 Помощь зала</h2>
+    <div class="bars" id="hallBars"></div>
+    <button class="btn-gold" id="hallOk">Понятно</button>
+  </div>
+</div>
+<!-- модалка друга -->
+<div id="friendModal" class="modal hidden">
+  <div class="modalCard">
+    <h2>📞 Звонок другу</h2>
+    <div class="friendText" id="friendText">—</div>
+    <button class="btn-gold" id="friendOk">Спасибо!</button>
+  </div>
+</div>
+<!-- финал -->
+<div id="winModal" class="modal hidden">
+  <div class="modalCard bigWin">
+    <h2 id="winTitle">🎉 ИГРА ОКОНЧЕНА</h2>
+    <div class="amt" id="winAmt">—</div>
+    <div class="friendText" id="winSub"></div>
+    <button class="btn-gold" id="winRestart">↻ Играть заново</button>
+  </div>
+</div>
+<!-- редактор -->
+<div id="editModal" class="modal hidden">
+  <div class="modalCard">
+    <h2>✏️ Вопросы</h2>
+    <p class="edHelp">Формат: первая строка — вопрос, дальше 4 варианта. Правильный помечай звёздочкой <b style="color:var(--gold)">*</b> в начале. Вопросы разделяй строкой <b style="color:var(--gold)">---</b></p>
+    <textarea id="edText" rows="12"></textarea>
+    <button class="btn-gold" id="edApply">✓ Применить</button>
+  </div>
+</div>
+
+<script>
+"use strict";
+const $=id=>document.getElementById(id);
+let sndOn=true;
+
+/* ===== звук ===== */
+let audioCtx=null;
+function beep(f,d,type,g){
+  if(!sndOn)return;
+  try{audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)();
+    if(audioCtx.state==='suspended')audioCtx.resume();
+    const o=audioCtx.createOscillator(),gn=audioCtx.createGain();
+    o.type=type||'sine';o.frequency.value=f;
+    gn.gain.setValueAtTime(g||0.12,audioCtx.currentTime);
+    gn.gain.exponentialRampToValueAtTime(0.0001,audioCtx.currentTime+d);
+    o.connect(gn);gn.connect(audioCtx.destination);
+    o.start();o.stop(audioCtx.currentTime+d+0.02);}catch(e){}
+}
+function rightSound(){[523,659,784,1047].forEach((f,i)=>setTimeout(()=>beep(f,.18,'triangle',.18),i*120));}
+function wrongSound(){beep(200,.5,'sawtooth',.25);setTimeout(()=>beep(150,.4,'square',.2),140);}
+function tension(){beep(330,.3,'sine',.1);}
+
+/* ===== вопросы ===== */
+const DEFAULT_Q=`Сколько лет молодожёны знакомы до свадьбы?
+*5 лет
+2 года
+10 лет
+полгода
+---
+Где прошло первое свидание?
+*В кафе
+В кино
+На концерте
+В парке
+---
+Какое блюдо лучше всех готовит невеста?
+*Плов
+Манты
+Лагман
+Самса
+---
+Любимое место отдыха пары?
+*Горы
+Море
+Дача
+Город
+---
+Кто сделал первый шаг к знакомству?
+*Жених
+Невеста
+Друзья
+Судьба`;
+
+function parseQuestions(text){
+  const blocks=text.split(/^---$/m).map(b=>b.trim()).filter(Boolean);
+  const out=[];
+  for(const b of blocks){
+    const lines=b.split('\n').map(s=>s.trim()).filter(Boolean);
+    if(lines.length<2)continue;
+    const q=lines[0];
+    const opts=[];let correct=0;
+    for(let i=1;i<lines.length && opts.length<4;i++){
+      let line=lines[i];
+      if(line.startsWith('*')){correct=opts.length;line=line.slice(1).trim();}
+      opts.push(line);
+    }
+    while(opts.length<4)opts.push('—');
+    out.push({q,opts,correct});
+  }
+  return out;
+}
+let questions=parseQuestions(DEFAULT_Q);
+
+const PRIZES=['1 000','2 000','3 000','5 000','10 000','15 000','25 000','50 000','100 000','200 000','400 000','800 000','1 500 000','3 000 000','💰 МИЛЛИОНЕР'];
+const SAFE=new Set([4,9,14]); // несгораемые уровни (0-индекс)
+
+/* ===== состояние ===== */
+let qi=0,selected=-1,locked=false,answered=0,gone=[];
+let used={f:false,h:false,c:false};
+
+function startGame(){
+  qi=0;answered=0;used={f:false,h:false,c:false};
+  ['ll5050','llHall','llFriend'].forEach(id=>$(id).classList.remove('used'));
+  $('winModal').classList.add('hidden');
+  loadQ();
+}
+function loadQ(){
+  if(qi>=questions.length){return finish(true);}
+  selected=-1;locked=false;gone=[];
+  $('btnLock').disabled=true;$('btnLock').classList.remove('hidden');
+  $('btnNext').classList.add('hidden');
+  const Q=questions[qi];
+  $('qnum').textContent='Вопрос '+(qi+1)+' из '+questions.length;
+  $('score').textContent='Угадано: '+answered;
+  $('qtext').textContent=Q.q;
+  const letters=['А','Б','В','Г'];
+  const a=$('answers');a.innerHTML='';
+  Q.opts.forEach((opt,i)=>{
+    const d=document.createElement('div');
+    d.className='ans';d.dataset.i=i;
+    d.innerHTML='<span class="let">'+letters[i]+'</span><span>'+esc(opt)+'</span>';
+    d.onclick=()=>selectAns(i);
+    a.appendChild(d);
+  });
+  renderLadder();
+  tension();
+}
+function selectAns(i){
+  if(locked||gone.includes(i))return;
+  selected=i;
+  document.querySelectorAll('.ans').forEach(el=>el.classList.toggle('sel',+el.dataset.i===i));
+  $('btnLock').disabled=false;
+  beep(440,.08,'sine',.12);
+}
+function lockAns(){
+  if(selected<0||locked)return;
+  locked=true;$('btnLock').disabled=true;
+  const Q=questions[qi];
+  const els=document.querySelectorAll('.ans');
+  els.forEach(el=>el.classList.add('disabled'));
+  setTimeout(()=>{
+    const correctEl=[...els].find(el=>+el.dataset.i===Q.correct);
+    const selEl=[...els].find(el=>+el.dataset.i===selected);
+    if(selected===Q.correct){
+      selEl.classList.remove('sel');selEl.classList.add('correct');
+      answered++;rightSound();
+    }else{
+      selEl.classList.remove('sel');selEl.classList.add('wrong');
+      if(correctEl)correctEl.classList.add('correct');
+      wrongSound();
+    }
+    $('score').textContent='Угадано: '+answered;
+    $('btnLock').classList.add('hidden');
+    $('btnNext').classList.remove('hidden');
+    renderLadder(true);
+  },1400);
+}
+function nextQ(){qi++;if(qi>=questions.length)finish(true);else loadQ();}
+
+function finish(){
+  const lvl=answered; // сколько уровней пройдено
+  let amount='0';
+  if(lvl>0)amount=PRIZES[Math.min(lvl-1,PRIZES.length-1)];
+  $('winTitle').textContent=lvl>=questions.length?'🏆 ВСЕ ВОПРОСЫ ПРОЙДЕНЫ!':'🎉 ИТОГ ИГРЫ';
+  $('winAmt').textContent=lvl>0?amount:'—';
+  $('winSub').textContent='Правильных ответов: '+answered+' из '+questions.length;
+  if(lvl>0)rightSound();
+  $('winModal').classList.remove('hidden');
+}
+
+/* ===== лесенка ===== */
+function renderLadder(done){
+  const l=$('ladder');l.innerHTML='';
+  const n=Math.min(questions.length,PRIZES.length);
+  for(let i=n-1;i>=0;i--){
+    const cls=i<qi?'done':(i===qi?'cur':'')+(SAFE.has(i)?' safe':'');
+    const mark=i<qi?'✓ ':(SAFE.has(i)?'🔒 ':'');
+    l.innerHTML+='<div class="step '+cls+'"><span class="n">'+mark+(i+1)+'</span><span>'+PRIZES[i]+'</span></div>';
+  }
+}
+
+/* ===== подсказки ===== */
+$('ll5050').onclick=()=>{
+  if(used.f)return;used.f=true;$('ll5050').classList.add('used');
+  const Q=questions[qi];
+  const wrong=[0,1,2,3].filter(i=>i!==Q.correct && !gone.includes(i));
+  // убрать 2 случайных неверных
+  for(let k=wrong.length-1;k>0;k--){const j=(Math.random()*(k+1))|0;[wrong[k],wrong[j]]=[wrong[j],wrong[k]];}
+  const toHide=wrong.slice(0,2);
+  toHide.forEach(i=>{gone.push(i);
+    const el=[...document.querySelectorAll('.ans')].find(e=>+e.dataset.i===i);
+    if(el)el.classList.add('gone');});
+  if(selected!==-1 && toHide.includes(selected)){selected=-1;$('btnLock').disabled=true;
+    document.querySelectorAll('.ans').forEach(el=>el.classList.remove('sel'));}
+  beep(600,.2,'square',.14);
+};
+$('llHall').onclick=()=>{
+  if(used.h)return;used.h=true;$('llHall').classList.add('used');
+  const Q=questions[qi];
+  const letters=['А','Б','В','Г'];
+  // распределение голосов: правильный получает больше, скрытые (gone) — 0
+  const active=[0,1,2,3].filter(i=>!gone.includes(i));
+  let weights=active.map(i=>i===Q.correct?45+Math.random()*30:5+Math.random()*25);
+  const sum=weights.reduce((a,b)=>a+b,0);
+  const perc=weights.map(w=>Math.round(w/sum*100));
+  // нормализация до 100
+  let diff=100-perc.reduce((a,b)=>a+b,0);perc[0]+=diff;
+  const bars=$('hallBars');bars.innerHTML='';
+  active.forEach((i,k)=>{
+    const b=document.createElement('div');b.className='bar';
+    b.innerHTML='<span>'+perc[k]+'%</span><div class="lb">'+letters[i]+'</div>';
+    bars.appendChild(b);
+    setTimeout(()=>{b.style.height=(perc[k]/100*160+20)+'px';},50);
+  });
+  $('hallModal').classList.remove('hidden');
+  beep(500,.15,'sine',.12);
+};
+$('hallOk').onclick=()=>$('hallModal').classList.add('hidden');
+$('llFriend').onclick=()=>{
+  if(used.c)return;used.c=true;$('llFriend').classList.add('used');
+  const Q=questions[qi];
+  const letters=['А','Б','В','Г'];
+  const conf=Math.random();
+  let txt;
+  if(conf<0.7){txt='«Я почти уверен, что это вариант <b style="color:var(--gold)">'+letters[Q.correct]+'</b> — '+esc(Q.opts[Q.correct])+'. Ставь на него!»';}
+  else{const other=[0,1,2,3].filter(i=>i!==Q.correct && !gone.includes(i));
+    const guess=other[(Math.random()*other.length)|0];
+    txt='«Точно не уверен... мне кажется <b style="color:var(--gold)">'+letters[Q.correct]+'</b>, но возможно и '+letters[guess]+'. Решай сам!»';}
+  $('friendText').innerHTML=txt;
+  $('friendModal').classList.remove('hidden');
+  beep(440,.15,'sine',.12);
+};
+$('friendOk').onclick=()=>$('friendModal').classList.add('hidden');
+
+/* ===== редактор ===== */
+$('btnEdit').onclick=()=>{
+  $('edText').value=questions.map(q=>{
+    const letters=q.opts.map((o,i)=>(i===q.correct?'*':'')+o);
+    return q.q+'\n'+letters.join('\n');
+  }).join('\n---\n');
+  $('editModal').classList.remove('hidden');
+};
+$('edApply').onclick=()=>{
+  const parsed=parseQuestions($('edText').value);
+  if(!parsed.length){alert('Не удалось разобрать вопросы. Проверь формат.');return;}
+  questions=parsed;$('editModal').classList.add('hidden');startGame();
+};
+
+/* ===== управление ===== */
+$('btnLock').onclick=lockAns;
+$('btnNext').onclick=nextQ;
+$('winRestart').onclick=startGame;
+$('btnSnd').onclick=()=>{sndOn=!sndOn;$('btnSnd').textContent=sndOn?'🔊':'🔇';};
+$('btnFs').onclick=toggleFs;
+function toggleFs(){if(document.fullscreenElement)document.exitFullscreen();
+  else document.documentElement.requestFullscreen().catch(()=>{});}
+function esc(s){return String(s).replace(/[<>&]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]));}
+
+addEventListener('keydown',e=>{
+  if($('editModal').classList.contains('hidden')===false)return;
+  if(e.key==='1')selectAns(0);
+  else if(e.key==='2')selectAns(1);
+  else if(e.key==='3')selectAns(2);
+  else if(e.key==='4')selectAns(3);
+  else if(e.code==='Enter'){e.preventDefault();
+    if(!$('btnNext').classList.contains('hidden'))nextQ();
+    else if(!$('btnLock').disabled)lockAns();}
+  else if(e.code==='Space'){e.preventDefault();
+    if(!$('btnNext').classList.contains('hidden'))nextQ();}
+  else if(e.key==='f'||e.key==='F'||e.key==='а'||e.key==='А')toggleFs();
+});
+
+startGame();
+</script>
+</body>
+</html>

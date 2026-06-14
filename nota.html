@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Угадай ноту 🎼</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Russo+One&display=swap" rel="stylesheet">
+<style>
+:root{--gold:#f5c542;--bg:#070912;--panel:rgba(15,19,38,.93);--text:#eef1ff;--muted:#8b93b8;--green:#4ad96b;--red:#ff5d5d}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:radial-gradient(1000px 480px at 50% -8%,rgba(245,197,66,.08),transparent 60%),var(--bg);color:var(--text);font-family:'Russo One',-apple-system,'Segoe UI',Roboto,sans-serif;overflow-x:hidden}
+.overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(4,6,14,.82);backdrop-filter:blur(8px);z-index:20;padding:16px;overflow:auto}
+.hidden{display:none!important}
+.panel{width:min(540px,94vw);background:var(--panel);border:1px solid rgba(245,197,66,.35);border-radius:20px;padding:24px 28px;box-shadow:0 24px 80px rgba(0,0,0,.65)}
+h1{margin:0 0 4px;font-size:27px;font-weight:400;color:var(--gold);text-align:center;letter-spacing:.5px}
+.sub{text-align:center;color:var(--muted);font-size:13px;margin-bottom:16px;font-family:system-ui}
+.row{display:flex;gap:10px;align-items:center;margin:10px 0}
+button{cursor:pointer;border:0;border-radius:12px;padding:12px 16px;font:inherit;font-size:15px;color:var(--text)}
+.btn-gold{background:linear-gradient(135deg,var(--gold),#d9a520);color:#1a1405;width:100%;font-size:19px;letter-spacing:1px;padding:14px}
+.btn-gold:disabled{filter:grayscale(.8);opacity:.5;cursor:not-allowed}
+.btn-ghost{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.16)}
+select{flex:1;background:#11152a;color:var(--text);border:1px solid rgba(255,255,255,.18);border-radius:10px;padding:10px;font-family:system-ui;font-size:14px;min-width:0}
+label.sl{display:block;margin:10px 0 2px;font-size:13px;color:var(--muted);font-family:system-ui}
+label.sl b{color:var(--text)}
+input[type=range]{width:100%;accent-color:var(--gold)}
+.check{display:flex;gap:8px;align-items:center;font-family:system-ui;font-size:14px;cursor:pointer}
+.status{font-family:system-ui;font-size:12.5px;color:var(--muted);white-space:nowrap}
+.hint{margin-top:14px;text-align:center;font-family:system-ui;font-size:12px;color:var(--muted)}
+.hint a{color:var(--gold);text-decoration:none}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 22px}
+@media(max-width:480px){.grid2{grid-template-columns:1fr}}
+#hud{position:fixed;top:14px;right:14px;display:flex;gap:8px;z-index:15}
+#hud button{padding:9px 13px;font-size:17px;border-radius:10px}
+.home{position:fixed;top:14px;left:14px;z-index:15;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.16);border-radius:10px;padding:9px 13px;color:var(--gold);text-decoration:none;font-size:14px}
+
+/* игровой экран */
+.stage{max-width:760px;margin:0 auto;padding:60px 18px 30px;text-align:center}
+.scbar{display:flex;justify-content:space-between;font-family:system-ui;font-size:15px;color:var(--muted);margin-bottom:14px}
+.scbar b{color:var(--gold)}
+.target{margin:6px 0 4px}
+.target .lbl{font-family:system-ui;font-size:16px;color:var(--muted)}
+.target .note{font-size:clamp(64px,16vw,130px);color:var(--gold);line-height:1;text-shadow:0 0 40px rgba(245,197,66,.4);margin:4px 0}
+.target .note.hit{color:var(--green);text-shadow:0 0 50px rgba(74,217,107,.6)}
+
+/* тюнер */
+.tuner{position:relative;height:90px;margin:24px 0 8px;background:linear-gradient(90deg,rgba(255,93,93,.12),rgba(74,217,107,.16),rgba(255,93,93,.12));border:1px solid rgba(255,255,255,.12);border-radius:16px;overflow:hidden}
+.tuner .center{position:absolute;left:50%;top:0;bottom:0;width:3px;background:var(--green);transform:translateX(-1px);box-shadow:0 0 14px rgba(74,217,107,.6);z-index:2}
+.tuner .zone{position:absolute;top:0;bottom:0;left:calc(50% - 38px);width:76px;background:rgba(74,217,107,.14);z-index:1}
+.tuner .needle{position:absolute;top:8px;bottom:8px;width:6px;border-radius:3px;background:var(--gold);left:50%;transform:translateX(-3px);transition:left .07s linear,background .1s;z-index:3;box-shadow:0 0 16px rgba(245,197,66,.6)}
+.tuner .liveNote{position:absolute;top:50%;transform:translate(-50%,-50%);font-family:system-ui;font-size:13px;color:#fff;z-index:4;pointer-events:none;text-shadow:0 1px 3px #000}
+.dir{font-family:system-ui;font-size:20px;height:28px;margin-top:8px;color:var(--muted)}
+.hold{height:14px;background:rgba(255,255,255,.1);border-radius:8px;overflow:hidden;margin:14px auto 0;max-width:420px}
+.hold>div{height:100%;width:0%;background:linear-gradient(90deg,#4ad96b,#f5c542);transition:width .1s}
+.livebig{font-family:system-ui;font-size:15px;color:var(--muted);margin-top:14px;min-height:22px}
+.livebig b{color:var(--text)}
+.bigBtns{display:flex;gap:10px;justify-content:center;margin-top:20px;flex-wrap:wrap}
+.scaleRow{font-family:system-ui;font-size:13px;color:var(--muted);margin-top:18px}
+</style>
+</head>
+<body>
+<a class="home" href="pult.html">⌂ ПУЛЬТ</a>
+<div id="hud" class="hidden">
+  <button class="btn-ghost" id="btnFs" title="Весь экран (F)">⛶</button>
+  <button class="btn-ghost" id="btnMenu" title="Меню (Esc)">⚙</button>
+</div>
+
+<!-- МЕНЮ -->
+<div id="menu" class="overlay">
+  <div class="panel">
+    <h1>🎼 УГАДАЙ НОТУ</h1>
+    <div class="sub">на экране нота — спойте её голосом и удержите. Попасть может любой голос!</div>
+    <div class="row">
+      <button class="btn-ghost" id="btnMic" style="flex:1">🎙 Включить микрофон</button>
+      <button class="btn-ghost" id="btnRefresh" title="Обновить список">↻</button>
+    </div>
+    <div class="row"><select id="micSel" disabled><option>— сначала включите микрофон —</option></select></div>
+    <div class="row">
+      <span class="status" id="liveNow" style="flex:1;text-align:center;font-size:15px">спойте — покажу вашу ноту</span>
+    </div>
+    <div class="grid2">
+      <div>
+        <label class="sl">Точность: <b id="vTol">обычная</b><br><span style="font-size:11px">левее — строже попадание</span></label>
+        <input type="range" id="tol" min="30" max="90" value="60">
+      </div>
+      <div>
+        <label class="sl">Удержать: <b id="vHold">1.5 с</b></label>
+        <input type="range" id="hold" min="0.5" max="3" step="0.5" value="1.5">
+      </div>
+    </div>
+    <label class="sl" style="margin-top:12px">Набор нот:</label>
+    <div class="row">
+      <select id="scaleSel">
+        <option value="easy">Простые — До Ре Ми Фа Соль Ля Си</option>
+        <option value="penta">Пентатоника — До Ре Ми Соль Ля</option>
+        <option value="three">Только 3 ноты — До Ми Соль</option>
+      </select>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <label class="check"><input type="checkbox" id="snd" checked> Подыгрывать ноту (пианино)</label>
+    </div>
+    <button class="btn-gold" id="btnStart" disabled style="margin-top:14px">▶ ИГРАТЬ</button>
+    <button class="btn-ghost" id="btnTuner" disabled style="margin-top:8px;width:100%">🎹 Просто тюнер (без игры)</button>
+    <div class="hint">пойте ровно и тяните звук • F — весь экран • Esc — меню • <a href="pult.html">⌂ пульт</a></div>
+  </div>
+</div>
+
+<!-- ИГРА -->
+<div id="stage" class="stage hidden">
+  <div class="scbar">
+    <span>Счёт: <b id="score">0</b></span>
+    <span id="modeLbl">режим игры</span>
+    <span>Рекорд: <b id="best">0</b></span>
+  </div>
+  <div class="target">
+    <div class="lbl" id="targetLbl">спойте ноту:</div>
+    <div class="note" id="targetNote">—</div>
+  </div>
+  <div class="tuner">
+    <div class="zone" id="zone"></div>
+    <div class="center"></div>
+    <div class="needle" id="needle"></div>
+    <div class="liveNote" id="needleNote" style="left:50%">—</div>
+  </div>
+  <div class="dir" id="dir">—</div>
+  <div class="hold"><div id="holdFill"></div></div>
+  <div class="livebig" id="livebig">слушаю...</div>
+  <div class="bigBtns">
+    <button class="btn-ghost" id="btnSkip">⏭ Другая нота</button>
+  </div>
+</div>
+
+<script>
+"use strict";
+const $=id=>document.getElementById(id);
+const menuEl=$('menu'),hudEl=$('hud'),stageEl=$('stage');
+
+/* русские названия нот по pitch class */
+const NOTE_RU=['До','До♯','Ре','Ре♯','Ми','Фа','Фа♯','Соль','Соль♯','Ля','Ля♯','Си'];
+const SCALES={
+  easy:[0,2,4,5,7,9,11],   // C D E F G A B
+  penta:[0,2,4,7,9],        // C D E G A
+  three:[0,4,7]             // C E G
+};
+const TOLWORD=v=>v<=45?'строгая':v<=70?'обычная':'мягкая';
+
+const P={tol:60,hold:1.5,scale:'easy',snd:true};
+$('tol').oninput=e=>{P.tol=+e.target.value;$('vTol').textContent=TOLWORD(P.tol);};
+$('hold').oninput=e=>{P.hold=+e.target.value;$('vHold').textContent=P.hold+' с';};
+$('scaleSel').onchange=e=>P.scale=e.target.value;
+$('snd').onchange=e=>P.snd=e.target.checked;
+
+/* ===== аудио ===== */
+let audioCtx=null,analyser=null,srcNode=null,micStream=null,buf=null,micOn=false;
+let sampleRate=44100;
+
+async function startMic(deviceId){
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
+    alert('Браузер не даёт доступ к микрофону с локального файла.\nОткрой в Chrome или по https (GitHub Pages).');return;}
+  try{
+    if(micStream)micStream.getTracks().forEach(t=>t.stop());
+    if(srcNode){try{srcNode.disconnect()}catch(e){}}
+    const cs={audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}};
+    if(deviceId)cs.audio.deviceId={exact:deviceId};
+    micStream=await navigator.mediaDevices.getUserMedia(cs);
+    audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)();
+    if(audioCtx.state==='suspended')await audioCtx.resume();
+    sampleRate=audioCtx.sampleRate;
+    srcNode=audioCtx.createMediaStreamSource(micStream);
+    analyser=audioCtx.createAnalyser();analyser.fftSize=2048;
+    srcNode.connect(analyser);buf=new Float32Array(analyser.fftSize);
+    micOn=true;setMicStatus('🎙 Микрофон работает',true);
+    $('btnStart').disabled=false;$('btnTuner').disabled=false;
+    await fillDevices();
+  }catch(err){
+    micOn=false;setMicStatus('⛔ Нет доступа к микрофону',false);
+    alert('Не удалось включить микрофон.\n1) Разреши в браузере (значок 🎤)\n2) Настройки системы → Конфиденциальность → Микрофон\n3) Надёжнее всего — открыть по https');
+  }
+}
+function setMicStatus(t,ok){const b=$('btnMic');b.textContent=t;b.style.borderColor=ok?'rgba(110,231,122,.6)':'rgba(255,93,93,.6)';}
+async function fillDevices(){
+  try{
+    const devs=await navigator.mediaDevices.enumerateDevices();
+    const ins=devs.filter(d=>d.kind==='audioinput');
+    const micSel=$('micSel');micSel.innerHTML='';
+    ins.forEach((d,i)=>{const o=document.createElement('option');o.value=d.deviceId;o.textContent=d.label||('Микрофон '+(i+1));micSel.appendChild(o);});
+    micSel.disabled=false;
+    if(micStream){const tId=micStream.getAudioTracks()[0].getSettings().deviceId;if(tId)micSel.value=tId;}
+  }catch(e){}
+}
+$('micSel').onchange=()=>startMic($('micSel').value);
+$('btnMic').onclick=()=>startMic($('micSel').disabled?undefined:($('micSel').value||undefined));
+$('btnRefresh').onclick=fillDevices;
+
+/* ===== определение высоты тона (autocorrelation) ===== */
+function detectPitch(){
+  if(!analyser)return -1;
+  analyser.getFloatTimeDomainData(buf);
+  const SIZE=buf.length;
+  // RMS — есть ли вообще звук
+  let rms=0;for(let i=0;i<SIZE;i++)rms+=buf[i]*buf[i];
+  rms=Math.sqrt(rms/SIZE);
+  if(rms<0.012)return -1; // тихо
+  // диапазон лагов для частот 70..1100 Гц
+  const minLag=Math.floor(sampleRate/1100);
+  const maxLag=Math.floor(sampleRate/70);
+  let bestLag=-1,bestCorr=0;
+  let lastCorr=1;
+  let foundGoodCorrelation=false;
+  const correlations=new Array(maxLag+1);
+  for(let lag=minLag;lag<=maxLag;lag++){
+    let corr=0;
+    for(let i=0;i<SIZE-lag;i++){corr+=buf[i]*buf[i+lag];}
+    corr=corr/(SIZE-lag);
+    correlations[lag]=corr;
+    if(corr>0.9*bestCorr && corr>lastCorr){
+      foundGoodCorrelation=true;
+      if(corr>bestCorr){bestCorr=corr;bestLag=lag;}
+    }else if(foundGoodCorrelation){
+      // прошли пик — параболическая интерполяция
+      const mid=bestLag;
+      if(mid>minLag && mid<maxLag){
+        const x1=correlations[mid-1]||0,x2=correlations[mid],x3=correlations[mid+1]||0;
+        const a=(x1+x3-2*x2)/2,b=(x3-x1)/2;
+        let refined=mid;
+        if(a)refined=mid-b/(2*a);
+        return sampleRate/refined;
+      }
+      return sampleRate/bestLag;
+    }
+    lastCorr=corr;
+  }
+  if(bestLag>0 && bestCorr>0.01)return sampleRate/bestLag;
+  return -1;
+}
+function freqToMidi(f){return Math.round(12*Math.log2(f/440)+69);}
+function midiToFreq(m){return 440*Math.pow(2,(m-69)/12);}
+function centsOff(f,midi){return Math.round(1200*Math.log2(f/midiToFreq(midi)));}
+
+/* подыгрыш ноты (пианино-ish) */
+function playNote(pc){
+  if(!P.snd||!audioCtx)return;
+  const midi=60+pc; // 4-я октава
+  const freq=midiToFreq(midi);
+  try{
+    const o=audioCtx.createOscillator(),gn=audioCtx.createGain();
+    o.type='triangle';o.frequency.value=freq;
+    gn.gain.setValueAtTime(0.0001,audioCtx.currentTime);
+    gn.gain.exponentialRampToValueAtTime(0.22,audioCtx.currentTime+0.02);
+    gn.gain.exponentialRampToValueAtTime(0.0001,audioCtx.currentTime+0.9);
+    o.connect(gn);gn.connect(audioCtx.destination);
+    o.start();o.stop(audioCtx.currentTime+0.95);
+  }catch(e){}
+}
+function beep(f,d,type,g){
+  if(!P.snd||!audioCtx)return;
+  try{const o=audioCtx.createOscillator(),gn=audioCtx.createGain();
+    o.type=type||'sine';o.frequency.value=f;
+    gn.gain.setValueAtTime(g||0.14,audioCtx.currentTime);
+    gn.gain.exponentialRampToValueAtTime(0.0001,audioCtx.currentTime+d);
+    o.connect(gn);gn.connect(audioCtx.destination);
+    o.start();o.stop(audioCtx.currentTime+d+0.02);}catch(e){}
+}
+function fanfare(){[523,659,784,1047].forEach((f,i)=>setTimeout(()=>beep(f,.18,'triangle',.18),i*110));}
+
+/* ===== игра ===== */
+let mode='game'; // game|tuner
+let state='menu';
+let targetPc=0,score=0,best=0,holdAcc=0,running=false;
+let smoothMidi=null;
+
+function startGame(){
+  mode='game';state='play';score=0;holdAcc=0;
+  menuEl.classList.add('hidden');hudEl.classList.remove('hidden');stageEl.classList.remove('hidden');
+  $('modeLbl').textContent='режим игры';
+  $('score').textContent='0';$('best').textContent=best;
+  $('targetLbl').textContent='спойте ноту:';
+  $('btnSkip').classList.remove('hidden');
+  pickTarget();
+}
+function startTuner(){
+  mode='tuner';state='play';
+  menuEl.classList.add('hidden');hudEl.classList.remove('hidden');stageEl.classList.remove('hidden');
+  $('modeLbl').textContent='тюнер';
+  $('targetLbl').textContent='ваша нота:';
+  $('targetNote').textContent='♪';
+  $('targetNote').classList.remove('hit');
+  $('dir').textContent='пойте — стрелка покажет высоту';
+  $('holdFill').style.width='0%';
+  $('btnSkip').classList.add('hidden');
+}
+function pickTarget(){
+  const sc=SCALES[P.scale];
+  let pc;do{pc=sc[(Math.random()*sc.length)|0];}while(pc===targetPc && sc.length>1);
+  targetPc=pc;holdAcc=0;
+  $('targetNote').textContent=NOTE_RU[targetPc];
+  $('targetNote').classList.remove('hit');
+  $('holdFill').style.width='0%';
+  $('dir').textContent='—';
+  playNote(targetPc);
+}
+function hitTarget(){
+  score++;$('score').textContent=score;
+  if(score>best){best=score;$('best').textContent=best;}
+  $('targetNote').classList.add('hit');
+  fanfare();
+  setTimeout(()=>{if(state==='play'&&mode==='game')pickTarget();},900);
+  state='hit';
+}
+
+let last=performance.now();
+function loop(now){
+  const dt=Math.min(0.05,(now-last)/1000)||0.016;last=now;
+  if(state==='play'||state==='hit'||state==='menu'){
+    const f=detectPitch();
+    updateLive(f,dt);
+  }
+  requestAnimationFrame(loop);
+}
+function updateLive(f,dt){
+  // меню — просто показать ноту
+  if(state==='menu'){
+    if(f>0){const midi=freqToMidi(f);const pc=((midi%12)+12)%12;
+      $('liveNow').textContent='вы поёте: '+NOTE_RU[pc]+'  ('+Math.round(f)+' Гц)';}
+    return;
+  }
+  const needle=$('needle'),needleNote=$('needleNote'),livebig=$('livebig'),dir=$('dir');
+  if(f<=0){
+    livebig.textContent='слушаю... (пойте громче и тяните звук)';
+    needle.style.background='var(--muted)';
+    return;
+  }
+  const midi=freqToMidi(f);
+  const pc=((midi%12)+12)%12;
+  // плавность
+  if(smoothMidi===null)smoothMidi=midi; else smoothMidi+=(midi-smoothMidi)*0.4;
+  const liveFreq=Math.round(f);
+
+  if(mode==='tuner'){
+    // ближайшая нота
+    const cents=centsOff(f,midi);
+    $('targetNote').textContent=NOTE_RU[pc];
+    needleNote.textContent=NOTE_RU[pc];
+    placeNeedle(cents);
+    dir.textContent=Math.abs(cents)<12?'✓ точно в ноте':cents>0?'чуть ниже спойте ↓':'чуть выше спойте ↑';
+    dir.style.color=Math.abs(cents)<12?'var(--green)':'var(--muted)';
+    livebig.innerHTML='<b>'+NOTE_RU[pc]+'</b> · '+liveFreq+' Гц · '+(cents>0?'+':'')+cents+' центов';
+    return;
+  }
+
+  // режим игры — отклонение от ближайшей ноты ЦЕЛЕВОГО класса
+  const targetMidiNear=Math.round(midi/12)*0; // не нужно; вычислим ближайший midi с нужным pc
+  const nearTargetMidi=nearestMidiOfClass(f,targetPc);
+  const centsToTarget=Math.round(1200*Math.log2(f/midiToFreq(nearTargetMidi)));
+  placeNeedle(centsToTarget);
+  needleNote.textContent=NOTE_RU[pc];
+  livebig.innerHTML='вы поёте: <b>'+NOTE_RU[pc]+'</b> ('+liveFreq+' Гц)';
+
+  const inZone=Math.abs(centsToTarget)<=P.tol && pc===targetPc;
+  if(state==='play'){
+    if(inZone){
+      holdAcc+=dt;dir.textContent='✓ держите!';dir.style.color='var(--green)';
+      needle.style.background='var(--green)';
+      $('holdFill').style.width=Math.min(100,holdAcc/P.hold*100)+'%';
+      if(holdAcc>=P.hold)hitTarget();
+    }else{
+      holdAcc=Math.max(0,holdAcc-dt*0.6);
+      $('holdFill').style.width=Math.min(100,holdAcc/P.hold*100)+'%';
+      needle.style.background='var(--gold)';
+      if(pc!==targetPc){
+        // подсказка направления по классу
+        dir.textContent=centsToTarget>0?'ниже ↓':'выше ↑';
+      }else{
+        dir.textContent=centsToTarget>0?'чуть ниже ↓':'чуть выше ↑';
+      }
+      dir.style.color='var(--muted)';
+    }
+  }
+}
+function nearestMidiOfClass(f,pc){
+  const midi=freqToMidi(f);
+  // ближайший MIDI той же ноты (pc)
+  let base=midi-(((midi%12)+12)%12)+pc;
+  const cands=[base-12,base,base+12];
+  let bestM=base,bestD=1e9;
+  for(const m of cands){const d=Math.abs(12*Math.log2(f/440)+69-m);if(d<bestD){bestD=d;bestM=m;}}
+  return bestM;
+}
+function placeNeedle(cents){
+  // ±100 центов → ±50% ширины
+  const clamped=Math.max(-100,Math.min(100,cents));
+  const pct=50+clamped/2; // 0..100
+  $('needle').style.left=pct+'%';
+  $('needleNote').style.left=pct+'%';
+}
+
+/* ===== управление ===== */
+$('btnStart').onclick=startGame;
+$('btnTuner').onclick=startTuner;
+$('btnSkip').onclick=()=>{if(mode==='game'){state='play';pickTarget();}};
+$('btnMenu').onclick=backToMenu;
+$('btnFs').onclick=toggleFs;
+function backToMenu(){state='menu';smoothMidi=null;
+  menuEl.classList.remove('hidden');hudEl.classList.add('hidden');stageEl.classList.add('hidden');}
+function toggleFs(){if(document.fullscreenElement)document.exitFullscreen();
+  else document.documentElement.requestFullscreen().catch(()=>{});}
+addEventListener('keydown',e=>{
+  if(e.key==='f'||e.key==='F'||e.key==='а'||e.key==='А'){e.preventDefault();toggleFs();}
+  if(e.code==='Escape')backToMenu();
+  if(e.code==='Space'&&mode==='game'&&state!=='menu'){e.preventDefault();state='play';pickTarget();}
+});
+
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

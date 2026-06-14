@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Тишина! 🤫</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Russo+One&display=swap" rel="stylesheet">
+<style>
+:root{--gold:#f5c542;--bg:#070912;--panel:rgba(15,19,38,.93);--text:#eef1ff;--muted:#8b93b8}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:'Russo One',-apple-system,'Segoe UI',Roboto,sans-serif}
+canvas#game{position:fixed;inset:0;display:block;width:100vw;height:100vh}
+.overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(4,6,14,.78);backdrop-filter:blur(8px);z-index:20;padding:16px;overflow:auto}
+.hidden{display:none!important}
+.panel{width:min(560px,94vw);background:var(--panel);border:1px solid rgba(245,197,66,.35);border-radius:20px;padding:24px 28px;box-shadow:0 24px 80px rgba(0,0,0,.65)}
+h1{margin:0 0 4px;font-size:27px;font-weight:400;color:var(--gold);text-align:center;letter-spacing:.5px}
+.sub{text-align:center;color:var(--muted);font-size:13px;margin-bottom:16px;font-family:system-ui}
+.row{display:flex;gap:10px;align-items:center;margin:10px 0}
+button{cursor:pointer;border:0;border-radius:12px;padding:12px 16px;font:inherit;font-size:15px;color:var(--text)}
+.btn-gold{background:linear-gradient(135deg,var(--gold),#d9a520);color:#1a1405;width:100%;font-size:19px;letter-spacing:1px;padding:14px}
+.btn-gold:disabled{filter:grayscale(.8);opacity:.5;cursor:not-allowed}
+.btn-ghost{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.16)}
+select{flex:1;background:#11152a;color:var(--text);border:1px solid rgba(255,255,255,.18);border-radius:10px;padding:10px;font-family:system-ui;font-size:14px;min-width:0}
+label.sl{display:block;margin:10px 0 2px;font-size:13px;color:var(--muted);font-family:system-ui}
+label.sl b{color:var(--text)}
+input[type=range]{width:100%;accent-color:var(--gold)}
+.check{display:flex;gap:8px;align-items:center;font-family:system-ui;font-size:14px;cursor:pointer}
+textarea{width:100%;background:#11152a;color:var(--text);border:1px solid rgba(255,255,255,.18);border-radius:10px;padding:10px;font-family:system-ui;font-size:14px;resize:vertical}
+.meterTrack{height:14px;background:#11152a;border-radius:8px;overflow:hidden;border:1px solid rgba(255,255,255,.12);flex:1}
+#miniFill{height:100%;width:0%;background:linear-gradient(90deg,#6ee77a,#f5c542,#ff5d5d)}
+.status{font-family:system-ui;font-size:12.5px;color:var(--muted);white-space:nowrap}
+.hint{margin-top:14px;text-align:center;font-family:system-ui;font-size:12px;color:var(--muted)}
+.hint a{color:var(--gold);text-decoration:none}
+#hud{position:fixed;top:14px;right:14px;display:flex;gap:8px;z-index:15}
+#hud button{padding:9px 13px;font-size:17px;border-radius:10px}
+.home{position:fixed;top:14px;left:14px;z-index:15;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.16);border-radius:10px;padding:9px 13px;color:var(--gold);text-decoration:none;font-size:14px}
+.popCard{width:min(520px,94vw);background:var(--panel);border:1px solid rgba(245,197,66,.45);border-radius:22px;padding:30px 34px;text-align:center;box-shadow:0 24px 80px rgba(0,0,0,.7)}
+.popCard h2{color:var(--gold);font-weight:400;font-size:26px;margin:0 0 18px}
+.resTable{font-family:system-ui;font-size:15px;text-align:left;margin:0 auto 18px;max-width:380px}
+.resTable .r{display:flex;justify-content:space-between;padding:8px 12px;border-radius:8px;margin:4px 0;background:rgba(255,255,255,.05)}
+.resTable .r.win{background:rgba(245,197,66,.16);border:1px solid rgba(245,197,66,.4)}
+.resTable .r b{color:var(--gold)}
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+<a class="home" href="pult.html">⌂ ПУЛЬТ</a>
+<div id="hud" class="hidden">
+  <button class="btn-ghost" id="btnFs" title="Весь экран (F)">⛶</button>
+  <button class="btn-ghost" id="btnMenu" title="Меню (Esc)">⚙</button>
+</div>
+
+<div id="menu" class="overlay">
+  <div class="panel">
+    <h1>🤫 ТИШИНА!</h1>
+    <div class="sub">кто дольше всех промолчит. Первый звук — и ты пойман!</div>
+    <div class="row">
+      <button class="btn-ghost" id="btnMic" style="flex:1">🎙 Включить микрофон</button>
+      <button class="btn-ghost" id="btnRefresh" title="Обновить список">↻</button>
+    </div>
+    <div class="row"><select id="micSel" disabled><option>— сначала включите микрофон —</option></select></div>
+    <div class="row">
+      <div class="meterTrack"><div id="miniFill"></div></div>
+      <span class="status" id="dbTxt" style="min-width:62px;text-align:right">— дБ</span>
+    </div>
+    <div class="row">
+      <button class="btn-ghost" id="btnCal" style="flex:1">📏 Калибровка фона зала (1,5 сек)</button>
+      <span class="status" id="calTxt">фон: −52 дБ</span>
+    </div>
+    <label class="sl" style="margin-top:10px">Строгость: <b id="vThr">средняя</b><br><span style="font-size:11px">левее — ловит даже шёпот, правее — только громкий звук</span></label>
+    <input type="range" id="thr" min="6" max="26" value="14">
+    <label class="sl" style="margin-top:12px">Команды (по строке) — пусто для одного игрока:</label>
+    <textarea id="teams" rows="3" placeholder="Стол №1&#10;Стол №2&#10;Дети&#10;Взрослые"></textarea>
+    <div class="row" style="margin-top:8px">
+      <label class="check"><input type="checkbox" id="snd" checked> Звук сигнала</label>
+    </div>
+    <button class="btn-gold" id="btnStart" disabled style="margin-top:14px">▶ СТАРТ</button>
+    <div class="hint">Space / тап — старт раунда • F — весь экран • Esc — меню • <a href="pult.html">⌂ пульт</a></div>
+  </div>
+</div>
+
+<div id="result" class="overlay hidden">
+  <div class="popCard">
+    <h2 id="resTitle">🏆 РЕЗУЛЬТАТЫ</h2>
+    <div class="resTable" id="resBody"></div>
+    <button class="btn-gold" id="btnAgain">↻ ЕЩЁ РАЗ</button>
+  </div>
+</div>
+
+<script>
+"use strict";
+const cv=document.getElementById('game'),cx=cv.getContext('2d');
+let W=0,H=0,DPR=1;
+function resize(){DPR=Math.min(2,window.devicePixelRatio||1);W=innerWidth;H=innerHeight;
+  cv.width=W*DPR;cv.height=H*DPR;cv.style.width=W+'px';cv.style.height=H+'px';
+  cx.setTransform(DPR,0,0,DPR,0,0);}
+addEventListener('resize',resize);resize();
+
+const $=id=>document.getElementById(id);
+const menuEl=$('menu'),hudEl=$('hud');
+const micSel=$('micSel'),miniFill=$('miniFill'),dbTxt=$('dbTxt'),calTxt=$('calTxt');
+const THRWORD=v=>v<=10?'строгая':v<=18?'средняя':'мягкая';
+
+const P={thr:14,snd:true};
+$('thr').oninput=e=>{P.thr=+e.target.value;$('vThr').textContent=THRWORD(P.thr);};
+$('snd').onchange=e=>P.snd=e.target.checked;
+
+/* ===== аудио ===== */
+let audioCtx=null,analyser=null,srcNode=null,micStream=null,buf=null,micOn=false;
+let db=-90,noiseFloor=-52,calArr=null,calUntil=0,levelSm=0;
+
+async function startMic(deviceId){
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
+    alert('Браузер не даёт доступ к микрофону с локального файла.\nОткрой в Chrome или по https (GitHub Pages).');return;}
+  try{
+    if(micStream)micStream.getTracks().forEach(t=>t.stop());
+    if(srcNode){try{srcNode.disconnect()}catch(e){}}
+    const cs={audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}};
+    if(deviceId)cs.audio.deviceId={exact:deviceId};
+    micStream=await navigator.mediaDevices.getUserMedia(cs);
+    audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)();
+    if(audioCtx.state==='suspended')await audioCtx.resume();
+    srcNode=audioCtx.createMediaStreamSource(micStream);
+    analyser=audioCtx.createAnalyser();analyser.fftSize=2048;
+    srcNode.connect(analyser);buf=new Float32Array(analyser.fftSize);
+    micOn=true;setMicStatus('🎙 Микрофон работает',true);$('btnStart').disabled=false;
+    await fillDevices();
+  }catch(err){
+    micOn=false;setMicStatus('⛔ Нет доступа к микрофону',false);
+    alert('Не удалось включить микрофон.\n1) Разреши в браузере (значок 🎤)\n2) Настройки системы → Конфиденциальность → Микрофон\n3) Надёжнее всего — открыть по https');
+  }
+}
+function setMicStatus(t,ok){const b=$('btnMic');b.textContent=t;b.style.borderColor=ok?'rgba(110,231,122,.6)':'rgba(255,93,93,.6)';}
+async function fillDevices(){
+  try{
+    const devs=await navigator.mediaDevices.enumerateDevices();
+    const ins=devs.filter(d=>d.kind==='audioinput');
+    micSel.innerHTML='';
+    ins.forEach((d,i)=>{const o=document.createElement('option');o.value=d.deviceId;o.textContent=d.label||('Микрофон '+(i+1));micSel.appendChild(o);});
+    micSel.disabled=false;
+    if(micStream){const tId=micStream.getAudioTracks()[0].getSettings().deviceId;if(tId)micSel.value=tId;}
+  }catch(e){}
+}
+micSel.onchange=()=>startMic(micSel.value);
+$('btnMic').onclick=()=>startMic(micSel.disabled?undefined:(micSel.value||undefined));
+$('btnRefresh').onclick=fillDevices;
+$('btnCal').onclick=()=>{if(!micOn){calTxt.textContent='сначала микрофон';return;}
+  calArr=[];calUntil=performance.now()+1500;calTxt.textContent='⏳ тихо в зале...';};
+
+function meter(){
+  if(!analyser)return;
+  analyser.getFloatTimeDomainData(buf);
+  let s=0;for(let i=0;i<buf.length;i++){const v=buf[i];s+=v*v;}
+  db=20*Math.log10(Math.sqrt(s/buf.length)+1e-8);
+  const now=performance.now();
+  if(calArr){if(now<calUntil){calArr.push(db);}
+    else{if(calArr.length)noiseFloor=calArr.reduce((x,y)=>x+y,0)/calArr.length;
+      calTxt.textContent='фон: '+noiseFloor.toFixed(0)+' дБ ✓';calArr=null;}}
+  // уровень над фоном для индикатора (0..1, где 1 = порог)
+  const over=db-noiseFloor;
+  levelSm+=(Math.max(0,Math.min(1.4,over/P.thr))-levelSm)*0.5;
+  if(state==='menu'){miniFill.style.width=Math.min(100,levelSm*100).toFixed(1)+'%';
+    dbTxt.textContent=db<=-89?'— дБ':db.toFixed(0)+' дБ';}
+}
+function beep(f,d,type,g){
+  if(!P.snd||!audioCtx)return;
+  try{const o=audioCtx.createOscillator(),gn=audioCtx.createGain();
+    o.type=type||'sine';o.frequency.value=f;
+    gn.gain.setValueAtTime(g||0.16,audioCtx.currentTime);
+    gn.gain.exponentialRampToValueAtTime(0.0001,audioCtx.currentTime+d);
+    o.connect(gn);gn.connect(audioCtx.destination);
+    o.start();o.stop(audioCtx.currentTime+d+0.02);}catch(e){}
+}
+function buzzer(){beep(180,.5,'sawtooth',.3);setTimeout(()=>beep(140,.4,'square',.25),120);}
+function fanfare(){[523,659,784,1047].forEach((f,i)=>setTimeout(()=>beep(f,.2,'triangle',.2),i*150));}
+
+/* ===== игра ===== */
+let state='menu'; // menu|ready|listen|caught|done
+let teams=[],curTeam=0,results=[];
+let startT=0,elapsed=0,readyUntil=0,flash=0,t=0,caughtTime=0;
+let particles=[];
+
+function startGame(){
+  const raw=$('teams').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  teams=raw.length?raw:['Игрок'];
+  curTeam=0;results=[];
+  menuEl.classList.add('hidden');hudEl.classList.remove('hidden');
+  $('result').classList.add('hidden');
+  beginRound();
+}
+function beginRound(){
+  state='ready';readyUntil=performance.now()+1600;elapsed=0;
+  beep(660,.12,'sine',.16);
+}
+function startListen(){
+  state='listen';startT=performance.now();beep(523,.12,'sine',.14);
+}
+function caught(){
+  state='caught';caughtTime=elapsed;flash=1;buzzer();
+  results.push({name:teams[curTeam],time:elapsed});
+  spawnBurst();
+  setTimeout(()=>{
+    curTeam++;
+    if(curTeam<teams.length)beginRound();
+    else showResults();
+  },2400);
+}
+function showResults(){
+  state='done';
+  const sorted=[...results].sort((a,b)=>b.time-a.time); // дольше = лучше
+  $('resTitle').textContent=teams.length>1?'🏆 ПОБЕДИТЕЛЬ: '+sorted[0].name:'⏱ РЕЗУЛЬТАТ';
+  let html='';
+  sorted.forEach((r,i)=>{
+    const medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1)+'.';
+    html+='<div class="r'+(i===0?' win':'')+'"><span>'+medal+' '+esc(r.name)+'</span><b>'+r.time.toFixed(1)+' с</b></div>';
+  });
+  $('resBody').innerHTML=html;
+  if(teams.length>1)fanfare();
+  $('result').classList.remove('hidden');
+}
+function esc(s){return s.replace(/[<>&]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]));}
+function spawnBurst(){
+  for(let i=0;i<40;i++){const a=Math.random()*Math.PI*2,sp=100+Math.random()*260;
+    particles.push({x:W/2,y:H*0.42,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,life:1+Math.random(),r:3+Math.random()*4});}
+}
+
+function update(dt){
+  t+=dt;meter();
+  if(flash>0)flash=Math.max(0,flash-dt*1.5);
+  for(const p of particles){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=200*dt;p.life-=dt;}
+  particles=particles.filter(p=>p.life>0);
+
+  if(state==='ready'){
+    if(performance.now()>=readyUntil)startListen();
+  }
+  if(state==='listen'){
+    elapsed=(performance.now()-startT)/1000;
+    if(db-noiseFloor>=P.thr && elapsed>0.25)caught();
+  }
+}
+
+/* ===== рисование ===== */
+function draw(){
+  const g=cx.createLinearGradient(0,0,0,H);
+  g.addColorStop(0, state==='listen'?'#0c1a14':'#101a36');
+  g.addColorStop(1,'#070912');
+  cx.fillStyle=g;cx.fillRect(0,0,W,H);
+
+  if(flash>0){cx.fillStyle='rgba(255,60,60,'+(flash*0.5)+')';cx.fillRect(0,0,W,H);}
+
+  const cyc=H*0.4;
+  cx.textAlign='center';
+
+  if(state==='ready'){
+    const left=Math.ceil((readyUntil-performance.now())/1000);
+    cx.fillStyle='#f5c542';cx.font='600 30px system-ui';
+    cx.fillText('Приготовьтесь к тишине...',W/2,cyc-90);
+    cx.font='bold '+Math.min(150,W*0.2)+'px "Russo One",system-ui';
+    cx.textBaseline='middle';cx.fillText(String(Math.max(1,left)),W/2,cyc+20);
+    cx.textBaseline='alphabetic';
+    drawTeam();
+    return;
+  }
+
+  if(state==='listen'){
+    cx.fillStyle='#6ee77a';cx.font='600 26px system-ui';
+    cx.fillText('🤫 ТИШИНА... держитесь!',W/2,cyc-120);
+    cx.fillStyle='#eef1ff';cx.font='bold '+Math.min(150,W*0.2)+'px "Russo One",system-ui';
+    cx.textBaseline='middle';cx.fillText(elapsed.toFixed(1),W/2,cyc+20);
+    cx.font='28px "Russo One",system-ui';cx.fillStyle='#8b93b8';
+    cx.fillText('секунд',W/2,cyc+20+Math.min(150,W*0.2)*0.5+30);
+    cx.textBaseline='alphabetic';
+    drawMeterBar();
+    drawTeam();
+    return;
+  }
+
+  if(state==='caught'){
+    cx.fillStyle='#ff5d5d';cx.font='bold '+Math.min(90,W*0.12)+'px "Russo One",system-ui';
+    cx.textBaseline='middle';cx.fillText('ПОЙМАН! 🔊',W/2,cyc-40);
+    cx.fillStyle='#eef1ff';cx.font='44px "Russo One",system-ui';
+    cx.fillText('продержались '+caughtTime.toFixed(1)+' с',W/2,cyc+60);
+    cx.textBaseline='alphabetic';
+    drawParticles();
+    drawTeam();
+    return;
+  }
+  // idle между раундами
+  drawParticles();
+}
+function drawMeterBar(){
+  const bw=Math.min(560,W*0.7),bx=(W-bw)/2,by=H*0.78,bh=20;
+  cx.fillStyle='rgba(255,255,255,.1)';cx.fillRect(bx,by,bw,bh);
+  const lv=Math.min(1,levelSm);
+  cx.fillStyle=lv>0.7?'#ff5d5d':lv>0.4?'#f5c542':'#6ee77a';
+  cx.fillRect(bx,by,bw*lv,bh);
+  // линия порога
+  cx.strokeStyle='#ff5d5d';cx.lineWidth=3;
+  cx.beginPath();cx.moveTo(bx+bw,by-6);cx.lineTo(bx+bw,by+bh+6);cx.stroke();
+  cx.fillStyle='#8b93b8';cx.font='13px system-ui';cx.textAlign='center';
+  cx.fillText('громкость в зале',W/2,by-12);
+}
+function drawTeam(){
+  if(teams.length<=1)return;
+  cx.fillStyle='#f5c542';cx.font='600 22px system-ui';cx.textAlign='center';
+  cx.fillText('Сейчас играет: '+teams[curTeam]+'  ('+(curTeam+1)+'/'+teams.length+')',W/2,H-34);
+}
+function drawParticles(){
+  for(const p of particles){cx.globalAlpha=Math.min(1,p.life);cx.fillStyle='#ff5d5d';
+    cx.beginPath();cx.arc(p.x,p.y,p.r,0,6.28);cx.fill();}
+  cx.globalAlpha=1;
+}
+
+/* ===== управление ===== */
+$('btnStart').onclick=startGame;
+$('btnAgain').onclick=()=>{$('result').classList.add('hidden');menuEl.classList.remove('hidden');hudEl.classList.add('hidden');state='menu';};
+$('btnFs').onclick=toggleFs;
+$('btnMenu').onclick=backToMenu;
+function backToMenu(){state='menu';menuEl.classList.remove('hidden');hudEl.classList.add('hidden');$('result').classList.add('hidden');}
+function toggleFs(){if(document.fullscreenElement)document.exitFullscreen();
+  else document.documentElement.requestFullscreen().catch(()=>{});}
+
+cv.addEventListener('click',()=>{
+  if(state==='listen' || state==='ready' || state==='caught')return;
+});
+addEventListener('keydown',e=>{
+  if(e.key==='f'||e.key==='F'||e.key==='а'||e.key==='А'){e.preventDefault();toggleFs();}
+  if(e.code==='Escape')backToMenu();
+});
+
+let last=performance.now();
+function loop(now){const dt=Math.min(0.05,(now-last)/1000)||0.016;last=now;
+  update(dt);draw();requestAnimationFrame(loop);}
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
